@@ -1,0 +1,15 @@
+This script is a fishing addon to be used with Windower for Final
+Fantasy XI.
+
+You can report issues, get the latest version, and view the source at:
+  http://github.com/svanheulen/fisher-windower-addon
+
+To install this addon, create a folder called "fisher" inside the Windower
+addons folder (most likely C:\Program Files (x86)\Windower4\addons) and copy
+the fisher.lua file there.
+
+This is a very rough example of how to implement a fishing bot with the
+Windower Lua API. It's hardcoded to catch Hakuryu and has no ability to equip
+more bait, move fish/bait around or anything else fancy like that.
+
+THIS IS FOR RESEARCH PURPOSES ONLY. USE AT YOUR OWN RISK.
