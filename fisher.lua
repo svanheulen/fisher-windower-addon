@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.0.1'
+_addon.version = '1.1.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -65,30 +65,41 @@ function equip_bait()
     return false
 end
 
+-- inventory helper functions
+
+function check_inventory()
+    count = 0
+    items = windower.ffxi.get_items()
+    for _,item in pairs(items.inventory) do
+        if item.id ~= 0 then
+            count = count + 1
+        end
+    end
+    return count < items.max_inventory
+end
+
 -- event callback functions
 
 function check_incoming_chunk(id, original, modified, injected, blocked)
-    if running then
-        if id == 0x115 then
-            if fish_id == original:sub(11, 14) then
-                catch_key = original:sub(21)
-                catch_time = os.time() + catch_delay
-            else
-                player = windower.ffxi.get_player()
-                windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
-            end
-        elseif id == 0x53 then
-            cast_delay = cast_delay + 1
-            cast_time = os.time() + 2
+    if running and id == 0x115 then
+        if fish_id == original:sub(11, 14) then
+            catch_key = original:sub(21)
+            catch_time = os.time() + catch_delay
+        else
+            player = windower.ffxi.get_player()
+            windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
         end
     end
 end
 
 function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running and id == 0x110 and original:byte(15) == 4 then
-        if check_bait() or equip_bait() then
-            cast_time = os.time() + cast_delay
-            running = true
+        if check_inventory() then
+            if check_bait() or equip_bait() then
+                cast_time = os.time() + cast_delay
+            else
+                running = false
+            end
         end
     end
 end
@@ -112,9 +123,14 @@ function fisher_command(...)
         cast_time = nil
         running = false
     elseif #arg == 1 and arg[1]:lower() == 'start' then
-        if check_bait() or equip_bait() then
-            cast_time = os.time() + cast_delay
-            running = true
+        if check_inventory() then
+            if check_bait() then
+                cast_time = os.time()
+                running = true
+            elseif equip_bait() then
+                cast_time = os.time() + cast_delay
+                running = true
+            end
         end
     end
 end
