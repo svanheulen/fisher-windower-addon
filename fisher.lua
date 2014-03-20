@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.1.0'
+_addon.version = '1.1.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -94,12 +94,10 @@ end
 
 function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running and id == 0x110 and original:byte(15) == 4 then
-        if check_inventory() then
-            if check_bait() or equip_bait() then
-                cast_time = os.time() + cast_delay
-            else
-                running = false
-            end
+        if check_inventory() and (check_bait() or equip_bait()) then
+            cast_time = os.time() + cast_delay
+        else
+            running = false
         end
     end
 end
