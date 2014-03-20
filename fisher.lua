@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.1.1'
+_addon.version = '1.1.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -25,6 +25,8 @@ fish_id = '\13\0\228\2' -- hakuryu
 catch_key = nil
 catch_delay = 20
 catch_time = nil
+release_delay = 1
+release_time = nil
 cast_delay = 4
 cast_time = nil
 running = false
@@ -86,19 +88,14 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             catch_key = original:sub(21)
             catch_time = os.time() + catch_delay
         else
-            player = windower.ffxi.get_player()
-            windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
+            release_time = os.time() + release_delay
         end
     end
 end
 
 function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running and id == 0x110 and original:byte(15) == 4 then
-        if check_inventory() and (check_bait() or equip_bait()) then
-            cast_time = os.time() + cast_delay
-        else
-            running = false
-        end
+        cast_time = os.time() + cast_delay
     end
 end
 
@@ -108,9 +105,19 @@ function check_prerender()
             catch_time = nil
             player = windower.ffxi.get_player()
             windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
+        elseif release_time ~= nil and os.time() >= release_time then
+            release_time = nil
+            player = windower.ffxi.get_player()
+            windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
         elseif cast_time ~= nil and os.time() >= cast_time then
             cast_time = nil
-            windower.send_command('input /fish')
+            if check_inventory() then
+                if check_bait() then
+                    windower.send_command('input /fish')
+                elseif equip_bait() then
+                    cast_time = os.time() + cast_delay
+                end
+            end
         end
     end
 end
@@ -118,18 +125,14 @@ end
 function fisher_command(...)
     if #arg == 1 and arg[1]:lower() == 'stop' then
         catch_time = nil
+        release_time = nil
         cast_time = nil
         running = false
     elseif #arg == 1 and arg[1]:lower() == 'start' then
-        if check_inventory() then
-            if check_bait() then
-                cast_time = os.time()
-                running = true
-            elseif equip_bait() then
-                cast_time = os.time() + cast_delay
-                running = true
-            end
-        end
+        catch_time = nil
+        release_time = nil
+        cast_time = os.time()
+        running = true
     end
 end
 
