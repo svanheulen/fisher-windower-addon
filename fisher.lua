@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.1.2'
+_addon.version = '1.1.3'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -34,23 +34,20 @@ running = false
 -- binary helper functions
 
 function pack_uint16(num)
-    return string.char(num % 256, math.floor(num / 256))
+    return string.char(num % 0x100, math.floor(num / 0x100))
 end
 
 function pack_uint32(num)
-    str = string.char(num % 256)
-    num = math.floor(num / 256)
-    str = str .. string.char(num % 256)
-    num = math.floor(num / 256)
-    str = str .. string.char(num % 256)
-    num = math.floor(num / 256)
-    return str .. string.char(num % 256)
+    local str = string.char(num % 0x100)
+    str = str .. string.char(math.floor(num / 0x100) % 0x100)
+    str = str .. string.char(math.floor(num / 0x10000) % 0x100)
+    return str .. string.char(math.floor(num / 0x1000000))
 end
 
 -- bait helper functions
 
 function check_bait()
-    items = windower.ffxi.get_items()
+    local items = windower.ffxi.get_items()
     if items.equipment.ammo == 0 or items.inventory[items.equipment.ammo].id ~= bait_id then
         return false
     end
@@ -70,8 +67,8 @@ end
 -- inventory helper functions
 
 function check_inventory()
-    count = 0
-    items = windower.ffxi.get_items()
+    local count = 0
+    local items = windower.ffxi.get_items()
     for _,item in pairs(items.inventory) do
         if item.id ~= 0 then
             count = count + 1
@@ -103,11 +100,11 @@ function check_prerender()
     if running then
         if catch_time ~= nil and os.time() >= catch_time then
             catch_time = nil
-            player = windower.ffxi.get_player()
+            local player = windower.ffxi.get_player()
             windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
         elseif release_time ~= nil and os.time() >= release_time then
             release_time = nil
-            player = windower.ffxi.get_player()
+            local player = windower.ffxi.get_player()
             windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
         elseif cast_time ~= nil and os.time() >= cast_time then
             cast_time = nil
