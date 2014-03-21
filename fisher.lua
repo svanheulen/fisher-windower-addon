@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.2.0'
+_addon.version = '1.3.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -37,17 +37,24 @@ chat_level = 0
 -- debug and logging functions
 
 function message(level, message)
+    local prefix = 'E'
+    local color = 167
+    if level == 1 then
+        prefix = 'I'
+        color = 207
+    elseif level == 2 then
+        prefix = 'D'
+        color = 160
+    end
     if log_level >= level then
-        log_file:write(os.time(), message)
+        if log_file == nil then
+            windower.add_to_chat(167, 'log file not open')
+            return
+        end
+        log_file:write('%s | %s | %s\n':format(os.date(), prefix, message))
         log_file:flush()
     end
     if chat_level >= level then
-        local color = 167
-        if level == 1 then
-            color = 207
-        elseif level == 2 then
-            color = 160
-        end
         windower.add_to_chat(color, message)
     end
 end
@@ -73,19 +80,25 @@ end
 
 function check_bait()
     local items = windower.ffxi.get_items()
-    message(1, 'checking equiped bait: %d':format(bait_id))
-    return items.equipment.ammo ~= 0 and items.inventory[items.equipment.ammo].id == bait_id
+    message(1, 'checking bait')
+    if items.equipment.ammo == 0 then
+        message(2, 'item slot: 0')
+        return false
+    end
+    message(2, 'item slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
+    return items.inventory[items.equipment.ammo].id == bait_id
 end
 
 function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if item.id == bait_id and item.status == 0 then
-            message(1, 'equiping bait: %d, from slot: %d':format(bait_id, slot))
+            message(1, 'equiping bait')
+            message(2, 'item slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3)
             return true
         end
     end
-    message(0, 'out of bait: %d':format(bait_id))
+    message(0, 'out of bait')
     fisher_command('stop')
     return false
 end
@@ -101,6 +114,7 @@ function check_inventory()
             count = count + 1
         end
     end
+    message(2, 'inventory count: %d, max: %d':format(count, items.max_inventory))
     if count == items.max_inventory then
         message(0, 'inventory full')
         fisher_command('stop')
@@ -170,18 +184,38 @@ function check_prerender()
 end
 
 function fisher_command(...)
-    if #arg == 1 and arg[1]:lower() == 'stop' then
-        message(1, 'stopped fishing')
-        catch_time = nil
-        release_time = nil
-        cast_time = nil
-        running = false
-    elseif #arg == 1 and arg[1]:lower() == 'start' then
+    if #arg == 1 and arg[1]:lower() == 'start' then
         message(1, 'started fishing')
         catch_time = nil
         release_time = nil
         cast_time = os.time()
         running = true
+    elseif #arg == 1 and arg[1]:lower() == 'stop' then
+        message(1, 'stopped fishing')
+        catch_time = nil
+        release_time = nil
+        cast_time = nil
+        running = false
+    elseif #arg == 2 and arg[1]:lower() == 'chat' then
+        chat_level = tonumber(arg[2])
+    elseif #arg == 2 and arg[1]:lower() == 'log' then
+        local new_level = tonumber(arg[2])
+        if new_level < 0 and log_file ~= nil then
+            log_file:close()
+            log_file = nil
+        elseif new_level >= 0 and log_file == nil then
+            log_file = io.open(windower.addon_path .. 'fisher.log', 'a')
+            if log_file == nil then
+                log_level = -1
+                message(0, 'unable to open log file')
+            end
+        end
+        log_level = new_level
+    else
+        windower.add_to_chat(167, 'usage: fisher start')
+        windower.add_to_chat(167, '        fisher stop')
+        windower.add_to_chat(167, '        fisher chat <level>')
+        windower.add_to_chat(167, '        fisher log <level>')
     end
 end
 
