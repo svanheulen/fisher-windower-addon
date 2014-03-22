@@ -16,20 +16,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.3.0'
+_addon.version = '1.3.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
 bait_id = 17400 -- sinking minnow
 fish_id = '\13\0\228\2' -- hakuryu
-catch_key = nil
 catch_delay = 20
-catch_time = nil
+--fish_id = '\14\0\160\5' -- lik
+--catch_delay = 10
+--fish_id = '\13\0\64\1' -- gugru tuna
+--catch_delay = 3
 release_delay = 1
-release_time = nil
 cast_delay = 4
+
+catch_key = nil
+catch_time = nil
+release_time = nil
 cast_time = nil
+
 running = false
+
 log_file = nil
 log_level = -1
 chat_level = 0
@@ -74,6 +81,17 @@ function pack_uint32(num)
     str = str .. string.char(math.floor(num / 0x100) % 0x100)
     str = str .. string.char(math.floor(num / 0x10000) % 0x100)
     return str .. string.char(math.floor(num / 0x1000000))
+end
+
+function string.unpack_uint16(str, i)
+    return str:byte(i + 1) * 0x100 + str:byte(i)
+end
+
+function string.unpack_uint32(str, i)
+    local num = str:byte(i + 3)
+    num = num * 0x100 + str:byte(i + 2)
+    num = num * 0x100 + str:byte(i + 1)
+    return num * 0x100 + str:byte(i)
 end
 
 -- bait helper functions
@@ -133,15 +151,20 @@ function check_chat_message(message, sender, mode, gm)
 end
 
 function check_incoming_chunk(id, original, modified, injected, blocked)
-    if running and id == 0x115 then
-        message(2, 'incoming fish info: ' .. original:tohex())
-        if fish_id == original:sub(11, 14) then
-            catch_key = original:sub(21)
-            message(1, 'catching fish in %d seconds':format(catch_delay))
-            catch_time = os.time() + catch_delay
-        else
-            message(1, 'releasing fish in %d seconds':format(release_delay))
-            release_time = os.time() + release_delay
+    if running then
+        if id == 0x115 then
+            if fish_id == original:sub(11, 14) then
+                catch_key = original:sub(21)
+                message(1, 'catching fish in %d seconds':format(catch_delay))
+                catch_time = os.time() + catch_delay
+            else
+                message(1, 'releasing fish in %d seconds':format(release_delay))
+                release_time = os.time() + release_delay
+            end
+        elseif id == 0x2A then
+            message(2, 'incoming fishy intuition: ' .. original:tohex())
+        elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
+            message(2, 'incoming fish caught: ' .. original:tohex())
         end
     end
 end
