@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.3.1'
+_addon.version = '1.3.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -31,6 +31,7 @@ release_delay = 1
 cast_delay = 4
 
 catch_key = nil
+
 catch_time = nil
 release_time = nil
 cast_time = nil
@@ -55,11 +56,15 @@ function message(level, message)
     end
     if log_level >= level then
         if log_file == nil then
-            windower.add_to_chat(167, 'log file not open')
-            return
+            log_file = io.open(windower.addon_path .. 'fisher.log', 'a')
         end
-        log_file:write('%s | %s | %s\n':format(os.date(), prefix, message))
-        log_file:flush()
+        if log_file == nil then
+            log_level = -1
+            windower.add_to_chat(167, 'unable to open log file')
+        else
+            log_file:write('%s | %s | %s\n':format(os.date(), prefix, message))
+            log_file:flush()
+        end
     end
     if chat_level >= level then
         windower.add_to_chat(color, message)
@@ -72,17 +77,6 @@ function string.tohex(str)
     return str:gsub('.', function (c) return '%02X':format(string.byte(c)) end)
 end
 
-function pack_uint16(num)
-    return string.char(num % 0x100, math.floor(num / 0x100))
-end
-
-function pack_uint32(num)
-    local str = string.char(num % 0x100)
-    str = str .. string.char(math.floor(num / 0x100) % 0x100)
-    str = str .. string.char(math.floor(num / 0x10000) % 0x100)
-    return str .. string.char(math.floor(num / 0x1000000))
-end
-
 function string.unpack_uint16(str, i)
     return str:byte(i + 1) * 0x100 + str:byte(i)
 end
@@ -92,6 +86,17 @@ function string.unpack_uint32(str, i)
     num = num * 0x100 + str:byte(i + 2)
     num = num * 0x100 + str:byte(i + 1)
     return num * 0x100 + str:byte(i)
+end
+
+function pack_uint16(num)
+    return string.char(num % 0x100, math.floor(num / 0x100))
+end
+
+function pack_uint32(num)
+    local str = string.char(num % 0x100)
+    str = str .. string.char(math.floor(num / 0x100) % 0x100)
+    str = str .. string.char(math.floor(num / 0x10000) % 0x100)
+    return str .. string.char(math.floor(num / 0x1000000))
 end
 
 -- bait helper functions
@@ -153,6 +158,7 @@ end
 function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
+            message(2, 'incoming fish info: ' .. original:tohex())
             if fish_id == original:sub(11, 14) then
                 catch_key = original:sub(21)
                 message(1, 'catching fish in %d seconds':format(catch_delay))
@@ -162,7 +168,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 release_time = os.time() + release_delay
             end
         elseif id == 0x2A then
-            message(2, 'incoming fishy intuition: ' .. original:tohex())
+            message(2, 'incoming fish intuition: ' .. original:tohex())
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
             message(2, 'incoming fish caught: ' .. original:tohex())
         end
@@ -170,11 +176,15 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
 end
 
 function check_outgoing_chunk(id, original, modified, injected, blocked)
-    if running and id == 0x110 then
-        message(2, 'outgoing fishing action: ' .. original:tohex())
-        if original:byte(15) == 4 then
-            message(1, 'casting in %d seconds':format(cast_delay))
-            cast_time = os.time() + cast_delay
+    if running then
+        if id == 0x110 then
+            message(2, 'outgoing fishing action: ' .. original:tohex())
+            if original:byte(15) == 4 then
+                message(1, 'casting in %d seconds':format(cast_delay))
+                cast_time = os.time() + cast_delay
+            end
+        elseif id == 0x1A then
+            message(2, 'outgoing fish command: ' .. original:tohex())
         end
     end
 end
@@ -195,8 +205,9 @@ function check_prerender()
             cast_time = nil
             if check_inventory() then
                 if check_bait() then
+                    local player = windower.ffxi.get_player()
                     message(1, 'casting')
-                    windower.send_command('input /fish')
+                    windower.packets.inject_outgoing(0x1A, '\26\8\0\0' .. pack_uint32(player.id) .. pack_uint16(player.index) .. '\14\0\0\0\0\0')
                 elseif equip_bait() then
                     message(1, 'casting in %d seconds':format(cast_delay))
                     cast_time = os.time() + cast_delay
@@ -218,22 +229,14 @@ function fisher_command(...)
         catch_time = nil
         release_time = nil
         cast_time = nil
+        if log_file ~= nil then
+            log_file:close()
+        end
         running = false
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         chat_level = tonumber(arg[2])
     elseif #arg == 2 and arg[1]:lower() == 'log' then
-        local new_level = tonumber(arg[2])
-        if new_level < 0 and log_file ~= nil then
-            log_file:close()
-            log_file = nil
-        elseif new_level >= 0 and log_file == nil then
-            log_file = io.open(windower.addon_path .. 'fisher.log', 'a')
-            if log_file == nil then
-                log_level = -1
-                message(0, 'unable to open log file')
-            end
-        end
-        log_level = new_level
+        log_level = tonumber(arg[2])
     else
         windower.add_to_chat(167, 'usage: fisher start')
         windower.add_to_chat(167, '        fisher stop')
