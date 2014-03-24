@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.3.2'
+_addon.version = '1.3.3'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -31,10 +31,6 @@ release_delay = 1
 cast_delay = 4
 
 catch_key = nil
-
-catch_time = nil
-release_time = nil
-cast_time = nil
 
 running = false
 
@@ -129,16 +125,16 @@ end
 -- inventory helper functions
 
 function check_inventory()
-    local count = 0
     local items = windower.ffxi.get_items()
+    local empty = items.max_inventory
     message(1, 'checking inventory space')
     for _,item in pairs(items.inventory) do
         if item.id ~= 0 then
-            count = count + 1
+            empty = empty - 1
         end
     end
-    message(2, 'inventory count: %d, max: %d':format(count, items.max_inventory))
-    if count == items.max_inventory then
+    message(2, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
+    if empty < 1 then
         message(0, 'inventory full')
         fisher_command('stop')
         return false
@@ -146,10 +142,37 @@ function check_inventory()
     return true
 end
 
+-- action functions
+
+function catch()
+    local player = windower.ffxi.get_player()
+    message(1, 'catching fish')
+    windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
+end
+
+function release()
+    local player = windower.ffxi.get_player()
+    message(1, 'releasing fish')
+    windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
+end
+
+function cast()
+    if check_inventory() then
+        if check_bait() then
+            local player = windower.ffxi.get_player()
+            message(1, 'casting')
+            windower.packets.inject_outgoing(0x1A, '\26\8\0\0' .. pack_uint32(player.id) .. pack_uint16(player.index) .. '\14\0\0\0\0\0')
+        elseif equip_bait() then
+            message(1, 'casting in %d seconds':format(cast_delay))
+            windower.send_command('wait %s; lua i fisher cast':format(cast_delay))
+        end
+    end
+end
+
 -- event callback functions
 
 function check_chat_message(message, sender, mode, gm)
-    if gm then
+    if running and gm then
         message(0, 'incoming gm chat')
         fisher_command('stop')
     end
@@ -162,10 +185,10 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if fish_id == original:sub(11, 14) then
                 catch_key = original:sub(21)
                 message(1, 'catching fish in %d seconds':format(catch_delay))
-                catch_time = os.time() + catch_delay
+                windower.send_command('wait %s; lua i fisher catch':format(catch_delay))
             else
                 message(1, 'releasing fish in %d seconds':format(release_delay))
-                release_time = os.time() + release_delay
+                windower.send_command('wait %s; lua i fisher release':format(release_delay))
             end
         elseif id == 0x2A then
             message(2, 'incoming fish intuition: ' .. original:tohex())
@@ -181,7 +204,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
             message(2, 'outgoing fishing action: ' .. original:tohex())
             if original:byte(15) == 4 then
                 message(1, 'casting in %d seconds':format(cast_delay))
-                cast_time = os.time() + cast_delay
+                windower.send_command('wait %s; lua i fisher cast':format(cast_delay))
             end
         elseif id == 0x1A then
             message(2, 'outgoing fish command: ' .. original:tohex())
@@ -189,46 +212,13 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
     end
 end
 
-function check_prerender()
-    if running then
-        if catch_time ~= nil and os.time() >= catch_time then
-            catch_time = nil
-            local player = windower.ffxi.get_player()
-            message(1, 'catching fish')
-            windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
-        elseif release_time ~= nil and os.time() >= release_time then
-            release_time = nil
-            local player = windower.ffxi.get_player()
-            message(1, 'releasing fish')
-            windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
-        elseif cast_time ~= nil and os.time() >= cast_time then
-            cast_time = nil
-            if check_inventory() then
-                if check_bait() then
-                    local player = windower.ffxi.get_player()
-                    message(1, 'casting')
-                    windower.packets.inject_outgoing(0x1A, '\26\8\0\0' .. pack_uint32(player.id) .. pack_uint16(player.index) .. '\14\0\0\0\0\0')
-                elseif equip_bait() then
-                    message(1, 'casting in %d seconds':format(cast_delay))
-                    cast_time = os.time() + cast_delay
-                end
-            end
-        end
-    end
-end
-
 function fisher_command(...)
     if #arg == 1 and arg[1]:lower() == 'start' then
         message(1, 'started fishing')
-        catch_time = nil
-        release_time = nil
-        cast_time = os.time()
         running = true
+        cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
         message(1, 'stopped fishing')
-        catch_time = nil
-        release_time = nil
-        cast_time = nil
         if log_file ~= nil then
             log_file:close()
         end
@@ -250,5 +240,4 @@ end
 windower.register_event('chat message', check_chat_message)
 windower.register_event('incoming chunk', check_incoming_chunk)
 windower.register_event('outgoing chunk', check_outgoing_chunk)
-windower.register_event('prerender', check_prerender)
 windower.register_event('addon command', fisher_command)
