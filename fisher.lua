@@ -16,9 +16,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.3.4'
+_addon.version = '1.4.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
+
+defaults = {}
+defaults.chat = 0
+defaults.log = -1
+defaults.equip = true
+
+config = require('config')
+settings = config.load(defaults)
 
 bait_id = 17400 -- sinking minnow
 fish_id = '\13\0\228\2' -- hakuryu
@@ -30,13 +38,9 @@ catch_delay = 20
 release_delay = 1
 cast_delay = 4
 
-catch_key = nil
-
 running = false
-
 log_file = nil
-log_level = -1
-chat_level = 0
+catch_key = nil
 
 -- debug and logging functions
 
@@ -50,19 +54,19 @@ function message(level, message)
         prefix = 'D'
         color = 160
     end
-    if log_level >= level then
+    if settings.log >= level then
         if log_file == nil then
             log_file = io.open(windower.addon_path .. 'fisher.log', 'a')
         end
         if log_file == nil then
-            log_level = -1
+            settings.log = -1
             windower.add_to_chat(167, 'unable to open log file')
         else
             log_file:write('%s | %s | %s\n':format(os.date(), prefix, message))
             log_file:flush()
         end
     end
-    if chat_level >= level then
+    if settings.chat >= level then
         windower.add_to_chat(color, message)
     end
 end
@@ -145,23 +149,30 @@ end
 -- action functions
 
 function catch()
-    local player = windower.ffxi.get_player()
-    message(1, 'catching fish')
-    windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
+    if running then
+        local player = windower.ffxi.get_player()
+        message(1, 'catching fish')
+        windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
+    end
 end
 
 function release()
-    local player = windower.ffxi.get_player()
-    message(1, 'releasing fish')
-    windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
+    if running then
+        local player = windower.ffxi.get_player()
+        message(1, 'releasing fish')
+        windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
+    end
 end
 
 function cast()
-    if check_inventory() then
+    if running and check_inventory() then
         if check_bait() then
             local player = windower.ffxi.get_player()
             message(1, 'casting')
             windower.packets.inject_outgoing(0x1A, '\26\8\0\0' .. pack_uint32(player.id) .. pack_uint16(player.index) .. '\14\0\0\0\0\0')
+        elseif settings.equip == false then
+            message(0, 'no bait equipped')
+            fisher_command('stop')
         elseif equip_bait() then
             message(1, 'casting in %d seconds':format(cast_delay))
             windower.send_command('wait %d; lua i fisher cast':format(cast_delay))
@@ -225,18 +236,28 @@ function fisher_command(...)
             log_file = nil
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
-        chat_level = tonumber(arg[2]) or -1
+        settings.chat = tonumber(arg[2]) or -1
+        settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'log' then
-        log_level = tonumber(arg[2]) or -1
-        if log_level < 0 and log_file ~= nil then
+        settings.log = tonumber(arg[2]) or -1
+        settings:save('all')
+        if settings.log < 0 and log_file ~= nil then
             log_file:close()
             log_file = nil
         end
+    elseif #arg == 2 and arg[1]:lower() == 'equip' then
+        if arg[2]:lower() == 'on' then
+            settings.equip = true
+        else
+            settings.equip = false
+        end
+        settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start')
         windower.add_to_chat(167, '        fisher stop')
         windower.add_to_chat(167, '        fisher chat <level>')
         windower.add_to_chat(167, '        fisher log <level>')
+        windower.add_to_chat(167, '        fisher equip <on/off>')
     end
 end
 
