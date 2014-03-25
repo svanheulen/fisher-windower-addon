@@ -16,27 +16,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.4.0'
+_addon.version = '1.5.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
 defaults = {}
 defaults.chat = 0
 defaults.log = -1
-defaults.equip = true
+defaults.equip = false
+defaults.move = false
 
 config = require('config')
 settings = config.load(defaults)
 
-bait_id = 17400 -- sinking minnow
-fish_id = '\13\0\228\2' -- hakuryu
-catch_delay = 20
---fish_id = '\14\0\160\5' -- lik
+--bait_id = 17400 -- sinking minnow
+--bait_id = 17000 -- meatball
+bait_id = 16999 -- trout ball
+
+ -- soryu
+fish_item_id = 5537
+fish_bite_id = '\3\0\212\3'
+catch_delay = 25
+
+-- hakuryu
+--fish_item_id = 5539
+--fish_bite_id = '\13\0\228\2'
+--catch_delay = 20
+
+-- lik
+--fish_item_id = 5129
+--fish_bite_id = '\14\0\160\5'
 --catch_delay = 10
---fish_id = '\13\0\64\1' -- gugru tuna
---catch_delay = 3
+
 release_delay = 1
 cast_delay = 4
+equip_delay = 2
+move_delay = 2
 
 running = false
 log_file = nil
@@ -121,8 +136,6 @@ function equip_bait()
             return true
         end
     end
-    message(0, 'out of bait')
-    fisher_command('stop')
     return false
 end
 
@@ -138,11 +151,61 @@ function check_inventory()
         end
     end
     message(2, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
-    if empty < 1 then
-        message(0, 'inventory full')
+    return empty > 0
+end
+
+function move_fish()
+    local items = windower.ffxi.get_items()
+    local empty_satchel = items.max_satchel
+    message(1, 'checking bag space')
+    for _,item in pairs(items.satchel) do
+        if item.id ~= 0 then
+            empty_satchel = empty_satchel - 1
+        end
+    end
+    message(2, 'satchel empty: %d, max: %d':format(empty_satchel, items.max_satchel))
+    local empty_sack = items.max_sack
+    for _,item in pairs(items.sack) do
+        if item.id ~= 0 then
+            empty_sack = empty_sack - 1
+        end
+    end
+    message(2, 'sack empty: %d, max: %d':format(empty_sack, items.max_sack))
+    local empty_case = items.max_case
+    for _,item in pairs(items.case) do
+        if item.id ~= 0 then
+            empty_case = empty_case - 1
+        end
+    end
+    message(2, 'case empty: %d, max: %d':format(empty_case, items.max_case))
+    if (empty_satchel + empty_sack + empty_case) == 0 then
+        message(0, 'all bags full')
         fisher_command('stop')
         return false
     end
+    message(1, 'moving fish')
+    moved = 0
+    for slot,item in pairs(items.inventory) do
+        if item.id == fish_item_id and item.status == 0 then
+            if empty_satchel > 0 then
+                windower.ffxi.put_item(5, slot, item.count)
+                empty_satchel = empty_satchel - 1
+                moved = moved + 1
+            elseif empty_sack > 0 then
+                windower.ffxi.put_item(6, slot, item.count)
+                empty_sack = empty_sack - 1
+                moved = moved + 1
+            elseif empty_satchel > 0 then
+                windower.ffxi.put_item(7, slot, item.count)
+                empty_sack = empty_sack - 1
+                moved = moved + 1
+            else
+                message(2, 'moved fish: %d':format(moved))
+                return true
+            end
+        end
+    end
+    message(2, 'moved fish: %d':format(moved))
     return true
 end
 
@@ -165,17 +228,24 @@ function release()
 end
 
 function cast()
-    if running and check_inventory() then
-        if check_bait() then
-            local player = windower.ffxi.get_player()
-            message(1, 'casting')
-            windower.packets.inject_outgoing(0x1A, '\26\8\0\0' .. pack_uint32(player.id) .. pack_uint16(player.index) .. '\14\0\0\0\0\0')
-        elseif settings.equip == false then
-            message(0, 'no bait equipped')
+    if running then
+        if check_inventory() then
+            if check_bait() then
+                message(1, 'casting')
+                windower.send_command('input /fish')
+            elseif settings.equip and equip_bait() then
+                message(1, 'casting in %d seconds':format(equip_delay))
+                windower.send_command('wait %d; lua i fisher cast':format(equip_delay))
+            else
+                message(0, 'out of bait')
+                fisher_command('stop')
+            end
+        elseif settings.move and move_fish() then
+            message(1, 'casting in %d seconds':format(move_delay))
+            windower.send_command('wait %d; lua i fisher cast':format(move_delay))
+        else
+            message(0, 'inventory full')
             fisher_command('stop')
-        elseif equip_bait() then
-            message(1, 'casting in %d seconds':format(cast_delay))
-            windower.send_command('wait %d; lua i fisher cast':format(cast_delay))
         end
     end
 end
@@ -193,7 +263,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
             message(2, 'incoming fish info: ' .. original:tohex())
-            if fish_id == original:sub(11, 14) then
+            if fish_bite_id == original:sub(11, 14) then
                 catch_key = original:sub(21)
                 message(1, 'catching fish in %d seconds':format(catch_delay))
                 windower.send_command('wait %d; lua i fisher catch':format(catch_delay))
@@ -252,12 +322,20 @@ function fisher_command(...)
             settings.equip = false
         end
         settings:save('all')
+    elseif #arg == 2 and arg[1]:lower() == 'move' then
+        if arg[2]:lower() == 'on' then
+            settings.move = true
+        else
+            settings.move = false
+        end
+        settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start')
         windower.add_to_chat(167, '        fisher stop')
         windower.add_to_chat(167, '        fisher chat <level>')
         windower.add_to_chat(167, '        fisher log <level>')
         windower.add_to_chat(167, '        fisher equip <on/off>')
+        windower.add_to_chat(167, '        fisher move <on/off>')
     end
 end
 
