@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.6.0'
+_addon.version = '1.6.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -25,6 +25,11 @@ defaults.chat = 1
 defaults.log = -1
 defaults.equip = false
 defaults.move = false
+defaults.delay = {}
+defaults.delay.release = 1
+defaults.delay.cast = 4
+defaults.delay.equip = 2
+defaults.delay.move = 2
 
 config = require('config')
 settings = config.load(defaults)
@@ -47,11 +52,6 @@ catch_delay = 25
 --fish_item_id = 5129
 --fish_bite_id = '\14\0\160\5'
 --catch_delay = 10
-
-release_delay = 1
-cast_delay = 4
-equip_delay = 2
-move_delay = 2
 
 running = false
 log_file = nil
@@ -275,18 +275,18 @@ function cast()
                 message(2, 'casting')
                 windower.send_command('input /fish')
             elseif settings.equip and equip_bait() then
-                message(2, 'casting in %d seconds':format(equip_delay))
-                windower.send_command('wait %d; lua i fisher cast':format(equip_delay))
+                message(2, 'casting in %d seconds':format(settings.delay.equip))
+                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.equip))
             elseif settings.move and move_bait() then
-                message(2, 'casting in %d seconds':format(move_delay))
-                windower.send_command('wait %d; lua i fisher cast':format(move_delay))
+                message(2, 'casting in %d seconds':format(settings.delay.move))
+                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
             else
                 message(0, 'out of bait')
                 fisher_command('stop')
             end
         elseif settings.move and move_fish() then
-            message(2, 'casting in %d seconds':format(move_delay))
-            windower.send_command('wait %d; lua i fisher cast':format(move_delay))
+            message(2, 'casting in %d seconds':format(settings.delay.move))
+            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
         else
             message(0, 'inventory full')
             fisher_command('stop')
@@ -312,8 +312,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 message(2, 'catching fish in %d seconds':format(catch_delay))
                 windower.send_command('wait %d; lua i fisher catch':format(catch_delay))
             else
-                message(2, 'releasing fish in %d seconds':format(release_delay))
-                windower.send_command('wait %d; lua i fisher release':format(release_delay))
+                message(2, 'releasing fish in %d seconds':format(settings.delay.release))
+                windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
             end
         elseif id == 0x2A then
             message(3, 'incoming fish intuition: ' .. original:tohex())
@@ -328,8 +328,8 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
         if id == 0x110 then
             message(3, 'outgoing fishing action: ' .. original:tohex())
             if original:byte(15) == 4 then
-                message(2, 'casting in %d seconds':format(cast_delay))
-                windower.send_command('wait %d; lua i fisher cast':format(cast_delay))
+                message(2, 'casting in %d seconds':format(settings.delay.cast))
+                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
         elseif id == 0x1A then
             message(3, 'outgoing fish command: ' .. original:tohex())
