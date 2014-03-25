@@ -4,12 +4,21 @@ Fantasy XI.
 You can report issues, get the latest version, and view the source at:
   http://github.com/svanheulen/fisher-windower-addon
 
+=============================== WARNING ===============================
+THIS CODE IS FOR RESEARCH PURPOSES ONLY. USING THIS CODE IS AGAINST THE
+POL/FFXI TERMS OF SERVICE AND MAY GET YOU BANNED. USE AT YOUR OWN RISK.
+=============================== WARNING ===============================
+
 To install this addon, create a folder called "fisher" inside the Windower
 addons folder (most likely C:\Program Files (x86)\Windower4\addons) and copy
 the fisher.lua file there.
 
-This is a very rough example of how to implement a fishing bot with the
-Windower Lua API. It's hardcoded to catch Hakuryu and has no ability to equip
-more bait, move fish/bait around or anything else fancy like that.
+To run this addon, in the Final Fantasy XI input line type:
+//lua load fisher
 
-THIS IS FOR RESEARCH PURPOSES ONLY. USE AT YOUR OWN RISK.
+After the addon is loaded you can display usage info by typing:
+//fisher
+
+The fish that will be caught and the bait that will be used are hardcoded
+for now. Set the chat level to 3 to see fish info packets to find the fish
+bite id for the fish you want to catch.
