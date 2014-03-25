@@ -16,12 +16,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.5.0'
+_addon.version = '1.5.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
 defaults = {}
-defaults.chat = 0
+defaults.chat = 1
 defaults.log = -1
 defaults.equip = false
 defaults.move = false
@@ -63,9 +63,12 @@ function message(level, message)
     local prefix = 'E'
     local color = 167
     if level == 1 then
+        prefix = 'W'
+        color = 200
+    elseif level == 2 then
         prefix = 'I'
         color = 207
-    elseif level == 2 then
+    elseif level == 3 then
         prefix = 'D'
         color = 160
     end
@@ -118,12 +121,12 @@ end
 
 function check_bait()
     local items = windower.ffxi.get_items()
-    message(1, 'checking bait')
+    message(2, 'checking bait')
     if items.equipment.ammo == 0 then
-        message(2, 'item slot: 0')
+        message(3, 'item slot: 0')
         return false
     end
-    message(2, 'item slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
+    message(3, 'item slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
     return items.inventory[items.equipment.ammo].id == bait_id
 end
 
@@ -131,7 +134,7 @@ function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if item.id == bait_id and item.status == 0 then
             message(1, 'equiping bait')
-            message(2, 'item slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
+            message(3, 'item slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3)
             return true
         end
@@ -144,40 +147,40 @@ end
 function check_inventory()
     local items = windower.ffxi.get_items()
     local empty = items.max_inventory
-    message(1, 'checking inventory space')
+    message(2, 'checking inventory space')
     for _,item in pairs(items.inventory) do
         if item.id ~= 0 then
             empty = empty - 1
         end
     end
-    message(2, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
+    message(3, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
     return empty > 0
 end
 
 function move_fish()
     local items = windower.ffxi.get_items()
     local empty_satchel = items.max_satchel
-    message(1, 'checking bag space')
+    message(2, 'checking bag space')
     for _,item in pairs(items.satchel) do
         if item.id ~= 0 then
             empty_satchel = empty_satchel - 1
         end
     end
-    message(2, 'satchel empty: %d, max: %d':format(empty_satchel, items.max_satchel))
+    message(3, 'satchel empty: %d, max: %d':format(empty_satchel, items.max_satchel))
     local empty_sack = items.max_sack
     for _,item in pairs(items.sack) do
         if item.id ~= 0 then
             empty_sack = empty_sack - 1
         end
     end
-    message(2, 'sack empty: %d, max: %d':format(empty_sack, items.max_sack))
+    message(3, 'sack empty: %d, max: %d':format(empty_sack, items.max_sack))
     local empty_case = items.max_case
     for _,item in pairs(items.case) do
         if item.id ~= 0 then
             empty_case = empty_case - 1
         end
     end
-    message(2, 'case empty: %d, max: %d':format(empty_case, items.max_case))
+    message(3, 'case empty: %d, max: %d':format(empty_case, items.max_case))
     if (empty_satchel + empty_sack + empty_case) == 0 then
         message(0, 'all bags full')
         fisher_command('stop')
@@ -200,12 +203,12 @@ function move_fish()
                 empty_sack = empty_sack - 1
                 moved = moved + 1
             else
-                message(2, 'moved fish: %d':format(moved))
+                message(3, 'moved fish: %d':format(moved))
                 return true
             end
         end
     end
-    message(2, 'moved fish: %d':format(moved))
+    message(3, 'moved fish: %d':format(moved))
     return true
 end
 
@@ -214,7 +217,7 @@ end
 function catch()
     if running then
         local player = windower.ffxi.get_player()
-        message(1, 'catching fish')
+        message(2, 'catching fish')
         windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
     end
 end
@@ -222,7 +225,7 @@ end
 function release()
     if running then
         local player = windower.ffxi.get_player()
-        message(1, 'releasing fish')
+        message(2, 'releasing fish')
         windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
     end
 end
@@ -231,17 +234,17 @@ function cast()
     if running then
         if check_inventory() then
             if check_bait() then
-                message(1, 'casting')
+                message(2, 'casting')
                 windower.send_command('input /fish')
             elseif settings.equip and equip_bait() then
-                message(1, 'casting in %d seconds':format(equip_delay))
+                message(2, 'casting in %d seconds':format(equip_delay))
                 windower.send_command('wait %d; lua i fisher cast':format(equip_delay))
             else
                 message(0, 'out of bait')
                 fisher_command('stop')
             end
         elseif settings.move and move_fish() then
-            message(1, 'casting in %d seconds':format(move_delay))
+            message(2, 'casting in %d seconds':format(move_delay))
             windower.send_command('wait %d; lua i fisher cast':format(move_delay))
         else
             message(0, 'inventory full')
@@ -262,19 +265,19 @@ end
 function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
-            message(2, 'incoming fish info: ' .. original:tohex())
+            message(3, 'incoming fish info: ' .. original:tohex())
             if fish_bite_id == original:sub(11, 14) then
                 catch_key = original:sub(21)
-                message(1, 'catching fish in %d seconds':format(catch_delay))
+                message(2, 'catching fish in %d seconds':format(catch_delay))
                 windower.send_command('wait %d; lua i fisher catch':format(catch_delay))
             else
-                message(1, 'releasing fish in %d seconds':format(release_delay))
+                message(2, 'releasing fish in %d seconds':format(release_delay))
                 windower.send_command('wait %d; lua i fisher release':format(release_delay))
             end
         elseif id == 0x2A then
-            message(2, 'incoming fish intuition: ' .. original:tohex())
+            message(3, 'incoming fish intuition: ' .. original:tohex())
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
-            message(2, 'incoming fish caught: ' .. original:tohex())
+            message(3, 'incoming fish caught: ' .. original:tohex())
         end
     end
 end
@@ -282,13 +285,13 @@ end
 function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x110 then
-            message(2, 'outgoing fishing action: ' .. original:tohex())
+            message(3, 'outgoing fishing action: ' .. original:tohex())
             if original:byte(15) == 4 then
-                message(1, 'casting in %d seconds':format(cast_delay))
+                message(2, 'casting in %d seconds':format(cast_delay))
                 windower.send_command('wait %d; lua i fisher cast':format(cast_delay))
             end
         elseif id == 0x1A then
-            message(2, 'outgoing fish command: ' .. original:tohex())
+            message(3, 'outgoing fish command: ' .. original:tohex())
         end
     end
 end
@@ -306,7 +309,7 @@ function fisher_command(...)
             log_file = nil
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
-        settings.chat = tonumber(arg[2]) or -1
+        settings.chat = tonumber(arg[2]) or 1
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
