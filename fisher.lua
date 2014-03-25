@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.5.1'
+_addon.version = '1.6.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -133,7 +133,7 @@ end
 function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if item.id == bait_id and item.status == 0 then
-            message(1, 'equiping bait')
+            message(1, 'equipping bait')
             message(3, 'item slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3)
             return true
@@ -154,7 +154,7 @@ function check_inventory()
         end
     end
     message(3, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
-    return empty > 0
+    return empty > 1
 end
 
 function move_fish()
@@ -182,8 +182,6 @@ function move_fish()
     end
     message(3, 'case empty: %d, max: %d':format(empty_case, items.max_case))
     if (empty_satchel + empty_sack + empty_case) == 0 then
-        message(0, 'all bags full')
-        fisher_command('stop')
         return false
     end
     message(1, 'moving fish')
@@ -202,13 +200,53 @@ function move_fish()
                 windower.ffxi.put_item(7, slot, item.count)
                 empty_sack = empty_sack - 1
                 moved = moved + 1
-            else
-                message(3, 'moved fish: %d':format(moved))
-                return true
             end
         end
     end
-    message(3, 'moved fish: %d':format(moved))
+    message(3, 'fish moved: %d':format(moved))
+    return true
+end
+
+function move_bait()
+    local items = windower.ffxi.get_items()
+    local empty = items.max_inventory
+    message(2, 'checking inventory space')
+    for _,item in pairs(items.inventory) do
+        if item.id ~= 0 then
+            empty = empty - 1
+        end
+    end
+    message(3, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
+    local count = 20
+    if empty < 2 then
+        return false
+    elseif empty <= count then
+        count = math.floor(empty / 2)
+    end
+    message(1, 'moving bait')
+    local moved = 0
+    for slot,item in pairs(items.satchel) do
+        if item.id == bait_id and count > 0 then
+            windower.ffxi.get_item(5, slot, item.count)
+            count = count - 1
+            moved = moved + 1
+        end
+    end
+    for slot,item in pairs(items.sack) do
+        if item.id == bait_id and count > 0 then
+            windower.ffxi.get_item(6, slot, item.count)
+            count = count - 1
+            moved = moved + 1
+        end
+    end
+    for slot,item in pairs(items.case) do
+        if item.id == bait_id and count > 0 then
+            windower.ffxi.get_item(7, slot, item.count)
+            count = count - 1
+            moved = moved + 1
+        end
+    end
+    message(3, 'bait moved: %d':format(moved))
     return true
 end
 
@@ -239,6 +277,9 @@ function cast()
             elseif settings.equip and equip_bait() then
                 message(2, 'casting in %d seconds':format(equip_delay))
                 windower.send_command('wait %d; lua i fisher cast':format(equip_delay))
+            elseif settings.move and move_bait() then
+                message(2, 'casting in %d seconds':format(move_delay))
+                windower.send_command('wait %d; lua i fisher cast':format(move_delay))
             else
                 message(0, 'out of bait')
                 fisher_command('stop')
