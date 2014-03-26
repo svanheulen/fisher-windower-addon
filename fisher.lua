@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.6.1'
+_addon.version = '1.6.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -204,7 +204,7 @@ function move_fish()
         end
     end
     message(3, 'fish moved: %d':format(moved))
-    return true
+    return moved > 0
 end
 
 function move_bait()
@@ -247,7 +247,7 @@ function move_bait()
         end
     end
     message(3, 'bait moved: %d':format(moved))
-    return true
+    return moved > 0
 end
 
 -- action functions
