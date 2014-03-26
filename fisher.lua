@@ -16,9 +16,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.6.2'
+_addon.version = '1.7.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
+
+function get_jst_date()
+    jst_date = os.time(os.date('!*t')) + (9 * 60 * 60)
+    return os.date('%Y-%m-%d', jst_date)
+end
 
 defaults = {}
 defaults.chat = 1
@@ -30,23 +35,26 @@ defaults.delay.release = 1
 defaults.delay.cast = 4
 defaults.delay.equip = 2
 defaults.delay.move = 2
+defaults.fatigue = {}
+defaults.fatigue.date = get_jst_date()
+defaults.fatigue.remaining = 200
 
 config = require('config')
 settings = config.load(defaults)
 
---bait_id = 17400 -- sinking minnow
+bait_id = 17400 -- sinking minnow
 --bait_id = 17000 -- meatball
-bait_id = 16999 -- trout ball
+--bait_id = 16999 -- trout ball
 
- -- soryu
-fish_item_id = 5537
-fish_bite_id = '\3\0\212\3'
-catch_delay = 25
+-- soryu
+--fish_item_id = 5537
+--fish_bite_id = '\3\0\212\3'
+--catch_delay = 25
 
 -- hakuryu
---fish_item_id = 5539
---fish_bite_id = '\13\0\228\2'
---catch_delay = 20
+fish_item_id = 5539
+fish_bite_id = '\13\0\228\2'
+catch_delay = 20
 
 -- lik
 --fish_item_id = 5129
@@ -270,7 +278,16 @@ end
 
 function cast()
     if running then
-        if check_inventory() then
+        local today = get_jst_date()
+        if settings.fatigue.date ~= today then
+            message(2, 'resetting fatigue')
+            settings.fatigue.date = today
+            settings.fatigue.remaining = 200
+        end
+        if settings.fatigue.remaining == 0 then
+            message(0, 'fatigued')
+            fisher_command('stop')
+        elseif check_inventory() then
             if check_bait() then
                 message(2, 'casting')
                 windower.send_command('input /fish')
@@ -319,6 +336,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             message(3, 'incoming fish intuition: ' .. original:tohex())
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
+            settings.fatigue.remaining = settings.fatigue.remaining - 1
         end
     end
 end
