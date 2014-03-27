@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.7.0'
+_addon.version = '1.7.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -59,6 +59,11 @@ catch_delay = 20
 -- lik
 --fish_item_id = 5129
 --fish_bite_id = '\14\0\160\5'
+--catch_delay = 10
+
+-- gugrusaurus
+--fish_item_id = 5127
+--fish_bite_id = '\5\0\136\4'
 --catch_delay = 10
 
 running = false
@@ -258,6 +263,24 @@ function move_bait()
     return moved > 0
 end
 
+-- fatigue helper functions
+
+function check_fatigued()
+    local today = get_jst_date()
+    if settings.fatigue.date ~= today then
+        message(2, 'resetting fatigue')
+        settings.fatigue.date = today
+        settings.fatigue.remaining = 200
+        settings:save('all')
+    end
+    return settings.fatigue.remaining == 0
+end
+
+function update_fatigue(count)
+    settings.fatigue.remaining = settings.fatigue.remaining - count
+    settings:save('all')
+end
+
 -- action functions
 
 function catch()
@@ -278,13 +301,7 @@ end
 
 function cast()
     if running then
-        local today = get_jst_date()
-        if settings.fatigue.date ~= today then
-            message(2, 'resetting fatigue')
-            settings.fatigue.date = today
-            settings.fatigue.remaining = 200
-        end
-        if settings.fatigue.remaining == 0 then
+        if check_fatigued() then
             message(0, 'fatigued')
             fisher_command('stop')
         elseif check_inventory() then
@@ -336,7 +353,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             message(3, 'incoming fish intuition: ' .. original:tohex())
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
-            settings.fatigue.remaining = settings.fatigue.remaining - 1
+            windower.send_command('lua i fisher update_fatigue 1')
         end
     end
 end
