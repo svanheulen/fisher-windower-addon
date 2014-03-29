@@ -21,7 +21,7 @@ _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
 function get_jst_date()
-    jst_date = os.time(os.date('!*t')) + (9 * 60 * 60)
+    jst_date = os.time(os.date('!*t')) + 32400
     return os.date('%Y-%m-%d', jst_date)
 end
 
@@ -42,6 +42,7 @@ defaults.fatigue.remaining = 200
 config = require('config')
 settings = config.load(defaults)
 
+--bait_id = 17407 -- minnow
 bait_id = 17400 -- sinking minnow
 --bait_id = 17000 -- meatball
 --bait_id = 16999 -- trout ball
@@ -51,19 +52,29 @@ bait_id = 17400 -- sinking minnow
 --fish_bite_id = '\3\0\212\3'
 --catch_delay = 25
 
+-- sekiryu
+--fish_item_id = 5538
+--fish_bite_id = '\8\0\92\3'
+--catch_delay = 20
+
 -- hakuryu
 fish_item_id = 5539
 fish_bite_id = '\13\0\228\2'
 catch_delay = 20
 
--- lik
---fish_item_id = 5129
---fish_bite_id = '\14\0\160\5'
---catch_delay = 10
+-- kokuryu
+--fish_item_id = 5540
+--fish_bite_id = '\8\0\56\4'
+--catch_delay = 20
 
 -- gugrusaurus
 --fish_item_id = 5127
 --fish_bite_id = '\5\0\136\4'
+--catch_delay = 10
+
+-- lik
+--fish_item_id = 5129
+--fish_bite_id = '\14\0\160\5'
 --catch_delay = 10
 
 running = false
@@ -209,7 +220,7 @@ function move_fish()
                 windower.ffxi.put_item(6, slot, item.count)
                 empty_sack = empty_sack - 1
                 moved = moved + 1
-            elseif empty_satchel > 0 then
+            elseif empty_case > 0 then
                 windower.ffxi.put_item(7, slot, item.count)
                 empty_sack = empty_sack - 1
                 moved = moved + 1
@@ -395,18 +406,10 @@ function fisher_command(...)
             log_file = nil
         end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
-        if arg[2]:lower() == 'on' then
-            settings.equip = true
-        else
-            settings.equip = false
-        end
+        settings.equip = (arg[2]:lower() == 'on')
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'move' then
-        if arg[2]:lower() == 'on' then
-            settings.move = true
-        else
-            settings.move = false
-        end
+        settings.move = (arg[2]:lower() == 'on')
         settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start')
