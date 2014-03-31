@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.7.5'
+_addon.version = '1.8.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -310,6 +310,20 @@ end
 
 -- event callback functions
 
+function check_status_change(new_status_id, old_status_id)
+    if running then
+        message(0, 'status changed')
+        fisher_command('stop')
+    end
+end
+
+function check_zone_change(new_id, old_id)
+    if running then
+        message(0, 'zone changed')
+        fisher_command('stop')
+    end
+end
+
 function check_chat_message(message, sender, mode, gm)
     if running and gm then
         message(0, 'incoming gm chat')
@@ -329,7 +343,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
             end
-        elseif id == 0x2A then
+        elseif id == 0x2A and windower.ffxi.get_player().id == original:unpack_uint32(5) then
             message(3, 'incoming fish intuition: ' .. original:tohex())
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
@@ -347,7 +361,12 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
         elseif id == 0x1A then
-            message(3, 'outgoing fish command: ' .. original:tohex())
+            if original:unpack_uint32(11) == 14 then
+                message(3, 'outgoing fish command: ' .. original:tohex())
+            else
+                message(0, 'outgoing command')
+                fisher_command('stop')
+            end
         end
     end
 end
@@ -396,6 +415,8 @@ end
 
 -- register event callbacks
 
+windower.register_event('status change', check_status_change)
+windower.register_event('zone change', check_zone_change)
 windower.register_event('chat message', check_chat_message)
 windower.register_event('incoming chunk', check_incoming_chunk)
 windower.register_event('outgoing chunk', check_outgoing_chunk)
