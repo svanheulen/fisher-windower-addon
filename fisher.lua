@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.7.3'
+_addon.version = '1.7.4'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -31,7 +31,7 @@ defaults.delay.cast = 4
 defaults.delay.equip = 2
 defaults.delay.move = 2
 defaults.fatigue = {}
-defaults.fatigue.date = os.date('%Y-%m-%d', os.time() + 32400)
+defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
 
 config = require('config')
@@ -272,7 +272,7 @@ end
 -- fatigue helper functions
 
 function check_fatigued()
-    local today = os.date('%Y-%m-%d', os.time() + 32400)
+    local today = os.date('!%Y-%m-%d', os.time() + 32400)
     if settings.fatigue.date ~= today then
         message(2, 'resetting fatigue')
         settings.fatigue.date = today
