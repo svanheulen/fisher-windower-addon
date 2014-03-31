@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.8.0'
+_addon.version = '1.8.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -385,11 +385,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         settings.chat = tonumber(arg[2]) or 1
-        message(1, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
+        windower.add_to_chat(200, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
-        message(1, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
+        windower.add_to_chat(200, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
         settings:save('all')
         if settings.log < 0 and log_file ~= nil then
             log_file:close()
@@ -397,11 +397,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
-        message(1, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
+        windower.add_to_chat(200, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'move' then
         settings.move = (arg[2]:lower() == 'on')
-        message(1, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
+        windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start')
