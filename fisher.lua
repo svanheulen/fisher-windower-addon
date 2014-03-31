@@ -16,9 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.7.4'
+_addon.version = '1.7.5'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
+
+-- default settings
 
 defaults = {}
 defaults.chat = 1
@@ -37,40 +39,12 @@ defaults.fatigue.remaining = 200
 config = require('config')
 settings = config.load(defaults)
 
---bait_id = 17407 -- minnow
+-- global variables
+
 bait_id = 17400 -- sinking minnow
---bait_id = 17000 -- meatball
---bait_id = 16999 -- trout ball
-
--- soryu
---fish_item_id = 5537
---fish_bite_id = '\3\0\212\3'
---catch_delay = 25
-
--- sekiryu
---fish_item_id = 5538
---fish_bite_id = '\8\0\92\3'
---catch_delay = 20
-
--- hakuryu
-fish_item_id = 5539
+fish_item_id = 5539 -- hakuryu
 fish_bite_id = '\13\0\228\2'
 catch_delay = 20
-
--- kokuryu
---fish_item_id = 5540
---fish_bite_id = '\8\0\56\4'
---catch_delay = 20
-
--- gugrusaurus
---fish_item_id = 5127
---fish_bite_id = '\5\0\136\4'
---catch_delay = 10
-
--- lik
---fish_item_id = 5129
---fish_bite_id = '\14\0\160\5'
---catch_delay = 10
 
 running = false
 log_file = nil
@@ -392,9 +366,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         settings.chat = tonumber(arg[2]) or 1
+        message(1, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
+        message(1, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
         settings:save('all')
         if settings.log < 0 and log_file ~= nil then
             log_file:close()
@@ -402,9 +378,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
+        message(1, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'move' then
         settings.move = (arg[2]:lower() == 'on')
+        message(1, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start')
