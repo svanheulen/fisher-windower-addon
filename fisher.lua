@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
 _addon.name = 'fisher'
-_addon.version = '1.8.1'
+_addon.version = '1.8.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -313,6 +313,7 @@ end
 function check_status_change(new_status_id, old_status_id)
     if running then
         message(0, 'status changed')
+        message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
         fisher_command('stop')
     end
 end
@@ -320,6 +321,7 @@ end
 function check_zone_change(new_id, old_id)
     if running then
         message(0, 'zone changed')
+        message(3, 'zone new: %d, old: %d':format(new_id, old_id))
         fisher_command('stop')
     end
 end
@@ -327,6 +329,7 @@ end
 function check_chat_message(message, sender, mode, gm)
     if running and gm then
         message(0, 'incoming gm chat')
+        message(3, 'chat from: %s, mode: %d':format(sender, mode))
         fisher_command('stop')
     end
 end
@@ -361,7 +364,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
         elseif id == 0x1A then
-            if original:unpack_uint32(11) == 14 then
+            if original:unpack_uint16(11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:tohex())
             else
                 message(0, 'outgoing command')
