@@ -15,10 +15,17 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --]]
 
+-- addon information
+
 _addon.name = 'fisher'
-_addon.version = '1.8.2'
+_addon.version = '1.8.3'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
+
+-- modules
+
+config = require('config')
+require('pack')
 
 -- default settings
 
@@ -36,7 +43,6 @@ defaults.fatigue = {}
 defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
 
-config = require('config')
 settings = config.load(defaults)
 
 -- global variables
@@ -86,28 +92,6 @@ end
 
 function string.tohex(str)
     return str:gsub('.', function (c) return '%02X':format(string.byte(c)) end)
-end
-
-function string.unpack_uint16(str, i)
-    return str:byte(i + 1) * 0x100 + str:byte(i)
-end
-
-function string.unpack_uint32(str, i)
-    local num = str:byte(i + 3)
-    num = num * 0x100 + str:byte(i + 2)
-    num = num * 0x100 + str:byte(i + 1)
-    return num * 0x100 + str:byte(i)
-end
-
-function pack_uint16(num)
-    return string.char(num % 0x100, math.floor(num / 0x100))
-end
-
-function pack_uint32(num)
-    local str = string.char(num % 0x100)
-    str = str .. string.char(math.floor(num / 0x100) % 0x100)
-    str = str .. string.char(math.floor(num / 0x10000) % 0x100)
-    return str .. string.char(math.floor(num / 0x1000000))
 end
 
 -- bait helper functions
@@ -247,6 +231,7 @@ end
 
 function check_fatigued()
     local today = os.date('!%Y-%m-%d', os.time() + 32400)
+    message(2, 'checking fatigue')
     if settings.fatigue.date ~= today then
         message(2, 'resetting fatigue')
         settings.fatigue.date = today
@@ -257,6 +242,7 @@ function check_fatigued()
 end
 
 function update_fatigue(count)
+    message(2, 'updating fatigue')
     settings.fatigue.remaining = settings.fatigue.remaining - count
     settings:save('all')
 end
@@ -267,7 +253,7 @@ function catch()
     if running then
         local player = windower.ffxi.get_player()
         message(2, 'catching fish')
-        windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\0\0\0\0' .. pack_uint16(player.index) .. '\3\0' .. catch_key)
+        windower.packets.inject_outgoing(0x110, pack('IIIHHI', 0xB10, player.id, 0, player.index, 3) .. catch_key)
     end
 end
 
@@ -275,7 +261,7 @@ function release()
     if running then
         local player = windower.ffxi.get_player()
         message(2, 'releasing fish')
-        windower.packets.inject_outgoing(0x110, '\16\11\0\0' .. pack_uint32(player.id) .. '\200\0\0\0' .. pack_uint16(player.index) .. '\3\0\0\0\0\0')
+        windower.packets.inject_outgoing(0x110, pack('IIIHHI', 0xB10, player.id, 200, player.index, 3, 0))
     end
 end
 
@@ -346,9 +332,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
             end
-        elseif id == 0x2A and windower.ffxi.get_player().id == original:unpack_uint32(5) then
+        elseif id == 0x2A and windower.ffxi.get_player().id == unpack(original, 'I', 5) then
             message(3, 'incoming fish intuition: ' .. original:tohex())
-        elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack_uint32(5) then
+        elseif id == 0x27 and windower.ffxi.get_player().id == unpack(original, 'I', 5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
             windower.send_command('lua i fisher update_fatigue 1')
         end
@@ -364,7 +350,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
         elseif id == 0x1A then
-            if original:unpack_uint16(11) == 14 then
+            if unpack(original, 'H', 11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:tohex())
             else
                 message(0, 'outgoing command')
