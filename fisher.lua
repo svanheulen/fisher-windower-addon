@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '1.8.3'
+_addon.version = '1.8.4'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -238,12 +238,14 @@ function check_fatigued()
         settings.fatigue.remaining = 200
         settings:save('all')
     end
+    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     return settings.fatigue.remaining == 0
 end
 
 function update_fatigue(count)
     message(2, 'updating fatigue')
     settings.fatigue.remaining = settings.fatigue.remaining - count
+    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     settings:save('all')
 end
 
@@ -253,7 +255,7 @@ function catch()
     if running then
         local player = windower.ffxi.get_player()
         message(2, 'catching fish')
-        windower.packets.inject_outgoing(0x110, pack('IIIHHI', 0xB10, player.id, 0, player.index, 3) .. catch_key)
+        windower.packets.inject_outgoing(0x110, 'IIIHH':pack(0xB10, player.id, 0, player.index, 3) .. catch_key)
     end
 end
 
@@ -261,7 +263,7 @@ function release()
     if running then
         local player = windower.ffxi.get_player()
         message(2, 'releasing fish')
-        windower.packets.inject_outgoing(0x110, pack('IIIHHI', 0xB10, player.id, 200, player.index, 3, 0))
+        windower.packets.inject_outgoing(0x110, 'IIIHHI':pack(0xB10, player.id, 200, player.index, 3, 0))
     end
 end
 
@@ -332,9 +334,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
             end
-        elseif id == 0x2A and windower.ffxi.get_player().id == unpack(original, 'I', 5) then
+        elseif id == 0x2A and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish intuition: ' .. original:tohex())
-        elseif id == 0x27 and windower.ffxi.get_player().id == unpack(original, 'I', 5) then
+        elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
             windower.send_command('lua i fisher update_fatigue 1')
         end
@@ -350,7 +352,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
         elseif id == 0x1A then
-            if unpack(original, 'H', 11) == 14 then
+            if original:unpack('H', 11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:tohex())
             else
                 message(0, 'outgoing command')
