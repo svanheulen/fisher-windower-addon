@@ -90,8 +90,6 @@ function message(level, message)
     end
 end
 
--- binary helper functions
-
 function string.tohex(str)
     return str:gsub('.', function (c) return '%02X':format(string.byte(c)) end)
 end
@@ -262,6 +260,16 @@ function get_bite_id()
     return nil
 end
 
+function update_fish()
+    if last_item_id == fish_item_id then
+        fish_bite_id = last_bite_id
+    elseif fish_bite_id == last_bite_id then
+        fish_bite_id = nil
+    end
+    settings.fish[last_bite_id] = last_item_id
+    last_item_id = nil
+end
+
 -- action functions
 
 function catch()
@@ -341,13 +349,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             message(3, 'incoming fish info: ' .. original:tohex())
             last_bite_id = original:unpack('I', 11)
             if last_item_id ~= nil then
-                if last_item_id == fish_item_id then
-                    fish_bite_id = last_bite_id
-                elseif fish_bite_id == last_bite_id then
-                    fish_bite_id = nil
-                end
-                settings.fish[last_bite_id] = last_item_id
-                last_item_id = nil
+                update_fish()
             end
             if fish_bite_id == last_bite_id or (fish_bite_id == nil and settings.fish[last_bite_id] == nil) then
                 catch_key = original:sub(21)
@@ -362,14 +364,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             last_item_id = original:unpack('I', 9)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
-            last_item_id = original:unpack('I', 17)
-            if last_item_id == fish_item_id then
-                fish_bite_id = last_bite_id
-            elseif fish_bite_id == last_bite_id then
-                fish_bite_id = nil
-            end
-            settings.fish[last_bite_id] = last_item_id
-            last_item_id = nil
+            update_fish()
             windower.send_command('lua i fisher update_fatigue 1')
         end
     end
