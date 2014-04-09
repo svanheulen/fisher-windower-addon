@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '1.8.4'
+_addon.version = '2.0.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -42,19 +42,21 @@ defaults.delay.move = 2
 defaults.fatigue = {}
 defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
+defaults.fish = {[48496653]=5539,}
 
 settings = config.load(defaults)
 
 -- global variables
 
-bait_id = 17400 -- sinking minnow
-fish_item_id = 5539 -- hakuryu
-fish_bite_id = '\13\0\228\2'
-catch_delay = 20
-
+bait_id = nil
+fish_item_id = nil
+fish_bite_id = nil
+catch_delay = nil
 running = false
 log_file = nil
 catch_key = nil
+last_bite_id = nil
+last_item_id = nil
 
 -- debug and logging functions
 
@@ -249,6 +251,17 @@ function update_fatigue(count)
     settings:save('all')
 end
 
+-- fish id helper functions
+
+function get_bite_id()
+    for bite_id,item_id in pairs(settings.fish) do
+        if item_id == fish_item_id then
+            return bite_id
+        end
+    end
+    return nil
+end
+
 -- action functions
 
 function catch()
@@ -326,7 +339,17 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
             message(3, 'incoming fish info: ' .. original:tohex())
-            if fish_bite_id == original:sub(11, 14) then
+            last_bite_id = original:unpack('I', 11)
+            if last_item_id ~= nil then
+                if last_item_id == fish_item_id then
+                    fish_bite_id = last_bite_id
+                elseif fish_bite_id == last_bite_id then
+                    fish_bite_id = nil
+                end
+                settings.fish[last_bite_id] = last_item_id
+                last_item_id = nil
+            end
+            if fish_bite_id == last_bite_id or (fish_bite_id == nil and settings.fish[last_bite_id] == nil) then
                 catch_key = original:sub(21)
                 message(2, 'catching fish in %d seconds':format(catch_delay))
                 windower.send_command('wait %d; lua i fisher catch':format(catch_delay))
@@ -336,8 +359,17 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             end
         elseif id == 0x2A and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish intuition: ' .. original:tohex())
+            last_item_id = original:unpack('I', 9)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
+            last_item_id = original:unpack('I', 17)
+            if last_item_id == fish_item_id then
+                fish_bite_id = last_bite_id
+            elseif fish_bite_id == last_bite_id then
+                fish_bite_id = nil
+            end
+            settings.fish[last_bite_id] = last_item_id
+            last_item_id = nil
             windower.send_command('lua i fisher update_fatigue 1')
         end
     end
@@ -363,7 +395,11 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
 end
 
 function fisher_command(...)
-    if #arg == 1 and arg[1]:lower() == 'start' then
+    if #arg == 4 and arg[1]:lower() == 'start' then
+        bait_id = tonumber(arg[2])
+        fish_item_id = tonumber(arg[3])
+        catch_delay = tonumber(arg[4])
+        fish_bite_id = get_bite_id()
         running = true
         message(1, 'started fishing')
         cast()
@@ -395,7 +431,7 @@ function fisher_command(...)
         windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
     else
-        windower.add_to_chat(167, 'usage: fisher start')
+        windower.add_to_chat(167, 'usage: fisher start <bait id> <fish id> <catch delay>')
         windower.add_to_chat(167, '        fisher stop')
         windower.add_to_chat(167, '        fisher chat <level>')
         windower.add_to_chat(167, '        fisher log <level>')
