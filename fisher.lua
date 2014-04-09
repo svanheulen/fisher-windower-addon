@@ -256,9 +256,11 @@ end
 function get_bite_id()
     for bite_id,item_id in pairs(settings.fish) do
         if item_id == fish_item_id then
-            return bite_id
+            message(3, 'found fish bite id: %d, item id: %d':format(bite_id, fish_item_id))
+            return tonumber(bite_id)
         end
     end
+    message(1, 'bite id unknown')
     return nil
 end
 
@@ -268,7 +270,8 @@ function update_fish()
     elseif fish_bite_id == last_bite_id then
         fish_bite_id = nil
     end
-    settings.fish[last_bite_id] = last_item_id
+    settings.fish[tostring(last_bite_id)] = tostring(last_item_id)
+    message(3, 'updated fish bite id: %d, item id: %d':format(last_bite_id, last_item_id))
     last_item_id = nil
 end
 
@@ -353,10 +356,11 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if last_item_id ~= nil then
                 update_fish()
             end
-            if fish_bite_id == last_bite_id or (fish_bite_id == nil and settings.fish[last_bite_id] == nil) then
+            if fish_bite_id == last_bite_id or (fish_bite_id == nil and settings.fish[tostring(last_bite_id)] == nil) then
                 catch_key = original:sub(21)
-                message(2, 'catching fish in %d seconds':format(catch_delay))
-                windower.send_command('wait %d; lua i fisher catch':format(fish_bite_id and settings.delay.unknown or catch_delay))
+                local delay = fish_bite_id and catch_delay or settings.delay.unknown
+                message(2, 'catching fish in %d seconds':format(delay))
+                windower.send_command('wait %d; lua i fisher catch':format(delay))
             else
                 message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
@@ -394,14 +398,34 @@ end
 
 function fisher_command(...)
     if #arg == 4 and arg[1]:lower() == 'start' then
-        bait_id = tonumber(arg[2])
-        fish_item_id = tonumber(arg[3])
+        if running then
+            windower.add_to_chat(167, 'already fishing')
+            return
+        end
+        _,bait_id = res.items:with('name', arg[2])
+        if bait_id == nil then
+            windower.add_to_chat(167, 'invalid bait name')
+            return
+        end
+        _,fish_item_id = res.items:with('name', arg[3])
+        if fish_item_id == nil then
+            windower.add_to_chat(167, 'invalid fish name')
+            return
+        end
         catch_delay = tonumber(arg[4])
-        fish_bite_id = get_bite_id()
+        if catch_delay == nil then
+            windower.add_to_chat(167, 'invalid catch delay')
+            return
+        end
         running = true
         message(1, 'started fishing')
+        fish_bite_id = get_bite_id()
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
+        if running == false then
+            windower.add_to_chat(167, 'not fishing')
+            return
+        end
         running = false
         message(1, 'stopped fishing')
         if log_file ~= nil then
@@ -429,7 +453,7 @@ function fisher_command(...)
         windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
     else
-        windower.add_to_chat(167, 'usage: fisher start <bait id> <fish id> <catch delay>')
+        windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
         windower.add_to_chat(167, '        fisher stop')
         windower.add_to_chat(167, '        fisher chat <level>')
         windower.add_to_chat(167, '        fisher log <level>')
