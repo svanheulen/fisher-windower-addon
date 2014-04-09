@@ -25,6 +25,7 @@ _addon.author = 'Seth VanHeulen'
 -- modules
 
 config = require('config')
+res = require('resources')
 require('pack')
 
 -- default settings
@@ -35,6 +36,7 @@ defaults.log = -1
 defaults.equip = false
 defaults.move = false
 defaults.delay = {}
+defaults.delay.unknown = 25
 defaults.delay.release = 1
 defaults.delay.cast = 4
 defaults.delay.equip = 2
@@ -42,7 +44,7 @@ defaults.delay.move = 2
 defaults.fatigue = {}
 defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
-defaults.fish = {[48496653]=5539,}
+defaults.fish = {}
 
 settings = config.load(defaults)
 
@@ -354,7 +356,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if fish_bite_id == last_bite_id or (fish_bite_id == nil and settings.fish[last_bite_id] == nil) then
                 catch_key = original:sub(21)
                 message(2, 'catching fish in %d seconds':format(catch_delay))
-                windower.send_command('wait %d; lua i fisher catch':format(catch_delay))
+                windower.send_command('wait %d; lua i fisher catch':format(fish_bite_id and settings.delay.unknown or catch_delay))
             else
                 message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
@@ -364,6 +366,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             last_item_id = original:unpack('I', 9)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             message(3, 'incoming fish caught: ' .. original:tohex())
+            last_item_id = original:unpack('I', 17)
             update_fish()
             windower.send_command('lua i fisher update_fatigue 1')
         end
