@@ -20,9 +20,7 @@ After the addon is loaded you can display usage info by typing:
 //fisher
 
 Known Issues:
-* Rare Windower crash when injecting packet while lagging
 * When pulling up multiple fish, it will only count as one toward fatigue
-* Right after logging in, an odd status change might stop fishing
 * Fish info from intuition wont be saved to settings imediately
 * Will not detect "unable to fish here" message
 * Will not detect being attacked
