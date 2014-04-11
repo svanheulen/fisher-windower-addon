@@ -270,7 +270,7 @@ function update_fish()
     elseif fish_bite_id == last_bite_id then
         fish_bite_id = nil
     end
-    settings.fish[tostring(last_bite_id)] = tostring(last_item_id)
+    settings.fish[tostring(last_bite_id)] = last_item_id
     message(3, 'updated fish bite id: %d, item id: %d':format(last_bite_id, last_item_id))
     last_item_id = nil
 end
