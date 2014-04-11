@@ -19,6 +19,10 @@ To run this addon, in the Final Fantasy XI input line type:
 After the addon is loaded you can display usage info by typing:
 //fisher
 
-The fish that will be caught and the bait that will be used are hardcoded
-for now. Set the chat level to 3 to see fish info packets to find the fish
-bite id for the fish you want to catch.
+Known Issues:
+* Rare Windower crash when injecting packet while lagging
+* When pulling up multiple fish, it will only count as one toward fatigue
+* Right after logging in, an odd status change might stop fishing
+* Fish info from intuition wont be saved to settings imediately
+* Will not detect "unable to fish here" message
+* Will not detect being attacked
