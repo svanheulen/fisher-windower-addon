@@ -332,14 +332,6 @@ function check_status_change(new_status_id, old_status_id)
     end
 end
 
-function check_zone_change(new_id, old_id)
-    if running then
-        message(0, 'zone changed')
-        message(3, 'zone new: %d, old: %d':format(new_id, old_id))
-        fisher_command('stop')
-    end
-end
-
 function check_chat_message(message, sender, mode, gm)
     if running and gm then
         message(0, 'incoming gm chat')
@@ -465,7 +457,6 @@ end
 -- register event callbacks
 
 windower.register_event('status change', check_status_change)
-windower.register_event('zone change', check_zone_change)
 windower.register_event('chat message', check_chat_message)
 windower.register_event('incoming chunk', check_incoming_chunk)
 windower.register_event('outgoing chunk', check_outgoing_chunk)
