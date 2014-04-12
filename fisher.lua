@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.1.0'
+_addon.version = '2.2.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -324,6 +324,20 @@ end
 
 -- event callback functions
 
+function check_action(action)
+    if running then
+        local player_id = windower.ffxi.get_player().id
+        for _,target in pairs(action.targets) do
+            if target.id == player_id then
+                message(0, 'action on player')
+                message(3, 'action category: %d, actor: %d':format(action.category, action.actor_id))
+                fisher_command('stop')
+                return
+            end
+        end
+    end
+end
+
 function check_status_change(new_status_id, old_status_id)
     if running and new_status_id ~= 0 then
         message(0, 'status changed')
@@ -461,6 +475,7 @@ end
 
 -- register event callbacks
 
+windower.register_event('action', check_action)
 windower.register_event('status change', check_status_change)
 windower.register_event('chat message', check_chat_message)
 windower.register_event('incoming chunk', check_incoming_chunk)
