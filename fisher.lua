@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.0.1'
+_addon.version = '2.1.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -164,7 +164,7 @@ function move_fish()
         return false
     end
     message(1, 'moving fish')
-    moved = 0
+    local moved = 0
     for slot,item in pairs(items.inventory) do
         if item.id == fish_item_id and item.status == 0 then
             if empty_satchel > 0 then
@@ -444,6 +444,10 @@ function fisher_command(...)
         settings.move = (arg[2]:lower() == 'on')
         windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
+    elseif #arg == 2 and arg[1]:lower() == 'reset' then
+        windower.add_to_chat(200, 'resetting fish database')
+        settings.fish = {}
+        settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
         windower.add_to_chat(167, '        fisher stop')
@@ -451,6 +455,7 @@ function fisher_command(...)
         windower.add_to_chat(167, '        fisher log <level>')
         windower.add_to_chat(167, '        fisher equip <on/off>')
         windower.add_to_chat(167, '        fisher move <on/off>')
+        windower.add_to_chat(167, '        fisher reset')
     end
 end
 
