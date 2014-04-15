@@ -18,8 +18,3 @@ To run this addon, in the Final Fantasy XI input line type:
 
 After the addon is loaded you can display usage info by typing:
 //fisher
-
-Known Issues:
-* When pulling up multiple fish, it will only count as one toward fatigue
-* Fish info from intuition wont be saved to settings imediately
-* Will not detect "unable to fish here" message
