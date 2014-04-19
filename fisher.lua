@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.0'
+_addon.version = '2.4.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -435,6 +435,9 @@ function fisher_command(...)
             windower.add_to_chat(167, 'invalid catch delay')
             return
         end
+        cast_count = 0
+        bite_count = 0
+        catch_count = 0
         running = true
         message(1, 'started fishing')
         fish_bite_id = get_bite_id()
@@ -459,9 +462,6 @@ function fisher_command(...)
         end
         running = false
         manual = false
-        cast_count = 0
-        bite_count = 0
-        catch_count = 0
         message(1, 'stopped fishing')
         if log_file ~= nil then
             log_file:close()
