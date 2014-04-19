@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.2.1'
+_addon.version = '2.3.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -433,6 +433,19 @@ function fisher_command(...)
         message(1, 'started fishing')
         fish_bite_id = get_bite_id()
         cast()
+    if #arg == 1 and arg[1]:lower() == 'restart' then
+        if running then
+            windower.add_to_chat(167, 'already fishing')
+            return
+        end
+        if bait_id == nil or fish_item_id == nil or catch_delay = nil then
+            windower.add_to_chat(167, 'invalid bait, fish or catch delay')
+            return
+        end
+        running = true
+        message(1, 'started fishing')
+        fish_bite_id = get_bite_id()
+        cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
         if not running then
             windower.add_to_chat(167, 'not fishing')
@@ -471,6 +484,7 @@ function fisher_command(...)
         settings:save('all')
     else
         windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
+        windower.add_to_chat(167, '        fisher restart')
         windower.add_to_chat(167, '        fisher stop')
         windower.add_to_chat(167, '        fisher chat <level>')
         windower.add_to_chat(167, '        fisher log <level>')
