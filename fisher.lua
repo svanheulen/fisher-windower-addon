@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.2.0'
+_addon.version = '2.2.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -59,6 +59,7 @@ log_file = nil
 catch_key = nil
 last_bite_id = nil
 last_item_id = nil
+manual = false
 
 -- debug and logging functions
 
@@ -278,19 +279,21 @@ end
 -- action functions
 
 function catch()
-    if running then
+    if running and not manual then
         local player = windower.ffxi.get_player()
         message(2, 'catching fish')
         windower.packets.inject_outgoing(0x110, 'IIIHH':pack(0xB10, player.id, 0, player.index, 3) .. catch_key)
     end
+    manual = false
 end
 
 function release()
-    if running then
+    if running and not manual then
         local player = windower.ffxi.get_player()
         message(2, 'releasing fish')
         windower.packets.inject_outgoing(0x110, 'IIIHHI':pack(0xB10, player.id, 200, player.index, 3, 0))
     end
+    manual = false
 end
 
 function cast()
@@ -390,6 +393,9 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
             if original:byte(15) == 4 then
                 message(2, 'casting in %d seconds':format(settings.delay.cast))
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+            elseif original:byte(15) == 3 and original:unpack('H', 3) ~= 0 then
+                message(2, 'manual catch or release')
+                manual = true
             end
         elseif id == 0x1A then
             if original:unpack('H', 11) == 14 then
@@ -428,11 +434,12 @@ function fisher_command(...)
         fish_bite_id = get_bite_id()
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
-        if running == false then
+        if not running then
             windower.add_to_chat(167, 'not fishing')
             return
         end
         running = false
+        manual = false
         message(1, 'stopped fishing')
         if log_file ~= nil then
             log_file:close()
