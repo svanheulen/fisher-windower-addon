@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.1'
+_addon.version = '2.4.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -492,11 +492,7 @@ function fisher_command(...)
         settings.fish = {}
         settings:save('all')
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
-        if running then
-            windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
-        else
-            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
-        end
+        windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
     else
         windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
         windower.add_to_chat(167, '        fisher restart')
