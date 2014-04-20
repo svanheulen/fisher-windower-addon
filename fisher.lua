@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.2'
+_addon.version = '2.4.3'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -346,7 +346,7 @@ function check_action(action)
 end
 
 function check_status_change(new_status_id, old_status_id)
-    if running and new_status_id ~= 0 then
+    if running and new_status_id ~= 0 and new_status_id ~= 50 then
         message(0, 'status changed')
         message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
         fisher_command('stop')
