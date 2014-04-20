@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.3'
+_addon.version = '2.4.4'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen'
 
@@ -491,6 +491,7 @@ function fisher_command(...)
         windower.add_to_chat(200, 'resetting fish database')
         settings.fish = {}
         settings:save('all')
+        fish_bite_id = nil
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
     else

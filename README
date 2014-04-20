@@ -1,20 +1,59 @@
-This script is a fishing addon to be used with Windower for Final
-Fantasy XI.
+This script is a automatic fishing addon to be used with Windower for
+Final Fantasy XI.
 
 You can report issues, get the latest version, and view the source at:
-  http://github.com/svanheulen/fisher-windower-addon
+    https://github.com/svanheulen/fisher-windower-addon
+
+Donations are accepted in the form of Alexandrite:
+    Acacia on Odin
 
 =============================== WARNING ===============================
 THIS CODE IS FOR RESEARCH PURPOSES ONLY. USING THIS CODE IS AGAINST THE
 POL/FFXI TERMS OF SERVICE AND MAY GET YOU BANNED. USE AT YOUR OWN RISK.
 =============================== WARNING ===============================
 
-To install this addon, create a folder called "fisher" inside the Windower
-addons folder (most likely C:\Program Files (x86)\Windower4\addons) and copy
-the fisher.lua file there.
+This addon doesn't actually fight the fish, it waits the provided catch
+delay time and then injects a packet that tells the server the fish has
+zero HP and you're pulling it up. When you start fishing, you need to
+use the exact spelling and capitalization (quoted when spaces are
+needed) the game uses for the bait and fish. If the bite ID for the fish
+is unknown it will catch every unknown fish/item/monster using a very
+long catch delay until it finds the correct bite ID. You can also cancel
+a fish on the line normally at any time.
 
-To run this addon, in the Final Fantasy XI input line type:
-//lua load fisher
+Fisher will automatically stop running under the following conditions:
+    You reach the 200 fish catch limit for the day.
+    You run out of bait.
+    You run out of inventory space.
+    An action is performed on you by a monster or another player.
+    Your status changes.
+    You receive a message from a GM.
+    You perform an action.
+    You change zones.
 
-After the addon is loaded you can display usage info by typing:
-//fisher
+To install this addon, create a folder called "fisher" inside the
+Windower addons folder and copy the fisher.lua file there. Your addon
+folder is most likely "C:\Program Files (x86)\Windower4\addons".
+
+To load the addon, in the Final Fantasy XI input line, type:
+    //lua load fisher
+
+The available commands are:
+    fisher start <bait> <fish> <catch delay>
+        Starts fishing.
+    fisher restart
+        Starts fishing using settings from the last "start" command.
+    fisher stop
+        Stops fishing.
+    fisher chat <level>
+        Sets the level of detail for output to the chat.
+    fisher log <level>
+        Sets the level of detail for output to the log file.
+    fisher equip <on/off>
+        Turns on/off automatic equipping of bait.
+    fisher move <on/off>
+        Turns on/off automatic moving of bait/fish between bags.
+    fisher reset
+        Clears all known bite IDs from settings file.
+    fisher stats
+        Displays stats about your fishing.
