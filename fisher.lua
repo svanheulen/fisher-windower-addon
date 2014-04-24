@@ -1,15 +1,15 @@
 --[[
 Copyright 2014 Seth VanHeulen
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version. 
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Lesser General Public License for more details.
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
+General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -18,15 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.4'
+_addon.version = '2.4.6'
 _addon.command = 'fisher'
-_addon.author = 'Seth VanHeulen'
+_addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
 -- modules
 
 config = require('config')
 res = require('resources')
+require('lists')
 require('pack')
+require('strings')
 
 -- default settings
 
@@ -81,7 +83,7 @@ function message(level, message)
     end
     if settings.log >= level then
         if log_file == nil then
-            log_file = io.open(windower.addon_path .. 'fisher.log', 'a')
+            log_file = io.open('%sdata/%s.log':format(windower.addon_path, windower.ffxi.get_player().name), 'a')
         end
         if log_file == nil then
             settings.log = -1
@@ -94,10 +96,6 @@ function message(level, message)
     if settings.chat >= level then
         windower.add_to_chat(color, message)
     end
-end
-
-function string.tohex(str)
-    return str:gsub('.', function (c) return '%02X':format(string.byte(c)) end)
 end
 
 -- bait helper functions
@@ -242,7 +240,7 @@ function check_fatigued()
         message(2, 'resetting fatigue')
         settings.fatigue.date = today
         settings.fatigue.remaining = 200
-        settings:save('all')
+        settings:save()
     end
     message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     return settings.fatigue.remaining == 0
@@ -252,7 +250,7 @@ function update_fatigue(count)
     message(2, 'updating fatigue')
     settings.fatigue.remaining = settings.fatigue.remaining - count
     message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
-    settings:save('all')
+    settings:save()
 end
 
 -- fish id helper functions
@@ -364,7 +362,7 @@ end
 function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
-            message(3, 'incoming fish info: ' .. original:tohex())
+            message(3, 'incoming fish info: ' .. original:hex())
             last_bite_id = original:unpack('I', 11)
             if last_item_id ~= nil then
                 update_fish()
@@ -380,10 +378,10 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher release':format(settings.delay.release))
             end
         elseif id == 0x2A and windower.ffxi.get_player().id == original:unpack('I', 5) then
-            message(3, 'incoming fish intuition: ' .. original:tohex())
+            message(3, 'incoming fish intuition: ' .. original:hex())
             last_item_id = original:unpack('I', 9)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
-            message(3, 'incoming fish caught: ' .. original:tohex())
+            message(3, 'incoming fish caught: ' .. original:hex())
             catch_count = catch_count + 1
             last_item_id = original:unpack('I', 17)
             update_fish()
@@ -395,7 +393,7 @@ end
 function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x110 then
-            message(3, 'outgoing fishing action: ' .. original:tohex())
+            message(3, 'outgoing fishing action: ' .. original:hex())
             if original:byte(15) == 4 then
                 message(2, 'casting in %d seconds':format(settings.delay.cast))
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
@@ -405,7 +403,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
             end
         elseif id == 0x1A then
             if original:unpack('H', 11) == 14 then
-                message(3, 'outgoing fish command: ' .. original:tohex())
+                message(3, 'outgoing fish command: ' .. original:hex())
             else
                 message(0, 'outgoing command')
                 fisher_command('stop')
@@ -470,11 +468,11 @@ function fisher_command(...)
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         settings.chat = tonumber(arg[2]) or 1
         windower.add_to_chat(200, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
-        settings:save('all')
+        settings:save()
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
         windower.add_to_chat(200, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
-        settings:save('all')
+        settings:save()
         if settings.log < 0 and log_file ~= nil then
             log_file:close()
             log_file = nil
@@ -482,15 +480,15 @@ function fisher_command(...)
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
         windower.add_to_chat(200, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
-        settings:save('all')
+        settings:save()
     elseif #arg == 2 and arg[1]:lower() == 'move' then
         settings.move = (arg[2]:lower() == 'on')
         windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
-        settings:save('all')
+        settings:save()
     elseif #arg == 1 and arg[1]:lower() == 'reset' then
         windower.add_to_chat(200, 'resetting fish database')
         settings.fish = {}
-        settings:save('all')
+        settings:save()
         fish_bite_id = nil
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
