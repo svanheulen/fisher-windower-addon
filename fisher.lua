@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.6'
+_addon.version = '2.4.7'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -48,7 +48,7 @@ defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
 defaults.fish = {}
 
-settings = config.load(defaults)
+settings = config.load('data/%s.xml':format(windower.ffxi.get_player().name), defaults)
 
 -- global variables
 
