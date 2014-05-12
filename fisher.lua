@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.4.7'
+_addon.version = '2.5.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -65,6 +65,7 @@ manual = false
 cast_count = 0
 bite_count = 0
 catch_count = 0
+error_retry = true
 
 -- debug and logging functions
 
@@ -359,6 +360,20 @@ function check_chat_message(message, sender, mode, gm)
     end
 end
 
+function check_incoming_text(original, modified, original_mode, modified_mode, blocked)
+    if original:find('You cannot fish here.') ~= nil then
+        if error_retry then
+            error_retry = false
+            message(1, 'retrying cast')
+            message(2, 'casting in %d seconds':format(settings.delay.cast))
+            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+        else
+            message(0, 'cannot fish')
+            fisher_command('stop')
+        end
+    end
+end
+
 function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x115 then
@@ -404,6 +419,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
         elseif id == 0x1A then
             if original:unpack('H', 11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:hex())
+                error_retry = true
             else
                 message(0, 'outgoing command')
                 fisher_command('stop')
@@ -439,6 +455,7 @@ function fisher_command(...)
         running = true
         message(1, 'started fishing')
         fish_bite_id = get_bite_id()
+        error_retry = true
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'restart' then
         if running then
@@ -452,6 +469,7 @@ function fisher_command(...)
         running = true
         message(1, 'started fishing')
         fish_bite_id = get_bite_id()
+        error_retry = true
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
         if not running then
@@ -510,6 +528,7 @@ end
 windower.register_event('action', check_action)
 windower.register_event('status change', check_status_change)
 windower.register_event('chat message', check_chat_message)
+windower.register_event('incoming text', check_incoming_text)
 windower.register_event('incoming chunk', check_incoming_chunk)
 windower.register_event('outgoing chunk', check_outgoing_chunk)
 windower.register_event('addon command', fisher_command)
