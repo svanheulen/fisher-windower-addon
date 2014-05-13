@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.5.0'
+_addon.version = '2.5.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -361,7 +361,7 @@ function check_chat_message(message, sender, mode, gm)
 end
 
 function check_incoming_text(original, modified, original_mode, modified_mode, blocked)
-    if original:find('You cannot fish here.') ~= nil then
+    if running and original:find('You cannot fish here.') ~= nil then
         if error_retry then
             error_retry = false
             message(1, 'retrying cast')
