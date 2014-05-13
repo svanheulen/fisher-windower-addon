@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.5.1'
+_addon.version = '2.6.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -434,15 +434,21 @@ function fisher_command(...)
             windower.add_to_chat(167, 'already fishing')
             return
         end
-        _,bait_id = res.items:with('name', arg[2])
+        bait_id = tonumber(arg[2])
         if bait_id == nil then
-            windower.add_to_chat(167, 'invalid bait name')
-            return
+            _,bait_id = res.items:with('name', arg[2])
+            if bait_id == nil then
+                windower.add_to_chat(167, 'invalid bait name')
+                return
+            end
         end
-        _,fish_item_id = res.items:with('name', arg[3])
+        fish_item_id = tonumber(arg[3])
         if fish_item_id == nil then
-            windower.add_to_chat(167, 'invalid fish name')
-            return
+            _,fish_item_id = res.items:with('name', arg[3])
+            if fish_item_id == nil then
+                windower.add_to_chat(167, 'invalid fish name')
+                return
+            end
         end
         catch_delay = tonumber(arg[4])
         if catch_delay == nil then
@@ -454,6 +460,7 @@ function fisher_command(...)
         catch_count = 0
         running = true
         message(1, 'started fishing')
+        message(2, 'bait id: %s, fish id: %s, catch delay: %s':format(bait_id, fish_item_id, catch_delay))
         fish_bite_id = get_bite_id()
         error_retry = true
         cast()
