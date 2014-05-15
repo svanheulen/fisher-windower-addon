@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.6.0'
+_addon.version = '2.7.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -107,17 +107,29 @@ function check_bait()
     if items.equipment.ammo == 0 then
         message(3, 'item slot: 0')
         return false
+    elseif items.equipment.ammo_bag == 0 then
+        message(3, 'inventory slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
+        return items.inventory[items.equipment.ammo].id == bait_id
+    else
+        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.ammo, items.wardrobe[items.equipment.ammo].id))
+        return items.wardrobe[items.equipment.ammo].id == bait_id
     end
-    message(3, 'item slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
-    return items.inventory[items.equipment.ammo].id == bait_id
 end
 
 function equip_bait()
+    for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
+        if item.id == bait_id and item.status == 0 then
+            message(1, 'equipping bait')
+            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
+            windower.ffxi.set_equip(slot, 3, 8)
+            return true
+        end
+    end
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if item.id == bait_id and item.status == 0 then
             message(1, 'equipping bait')
-            message(3, 'item slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3)
+            message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
+            windower.ffxi.set_equip(slot, 3, 0)
             return true
         end
     end
@@ -128,41 +140,20 @@ end
 
 function check_inventory()
     local items = windower.ffxi.get_items()
-    local empty = items.max_inventory
     message(2, 'checking inventory space')
-    for _,item in pairs(items.inventory) do
-        if item.id ~= 0 then
-            empty = empty - 1
-        end
-    end
-    message(3, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
-    return empty > 1
+    message(3, 'inventory count: %d, max: %d':format(items.count_inventory, items.max_inventory))
+    return (items.max_inventory - items.count_inventory) > 1
 end
 
 function move_fish()
     local items = windower.ffxi.get_items()
-    local empty_satchel = items.max_satchel
     message(2, 'checking bag space')
-    for _,item in pairs(items.satchel) do
-        if item.id ~= 0 then
-            empty_satchel = empty_satchel - 1
-        end
-    end
-    message(3, 'satchel empty: %d, max: %d':format(empty_satchel, items.max_satchel))
-    local empty_sack = items.max_sack
-    for _,item in pairs(items.sack) do
-        if item.id ~= 0 then
-            empty_sack = empty_sack - 1
-        end
-    end
-    message(3, 'sack empty: %d, max: %d':format(empty_sack, items.max_sack))
-    local empty_case = items.max_case
-    for _,item in pairs(items.case) do
-        if item.id ~= 0 then
-            empty_case = empty_case - 1
-        end
-    end
-    message(3, 'case empty: %d, max: %d':format(empty_case, items.max_case))
+    local empty_satchel = items.max_satchel - items.count_satchel
+    message(3, 'satchel count: %d, max: %d':format(items.count_satchel, items.max_satchel))
+    local empty_sack = items.max_sack - items.count_sack
+    message(3, 'sack count: %d, max: %d':format(items.count_sack, items.max_sack))
+    local empty_case = items.max_case - items.count_case
+    message(3, 'case count: %d, max: %d':format(items.count_case, items.max_case))
     if (empty_satchel + empty_sack + empty_case) == 0 then
         return false
     end
@@ -191,14 +182,9 @@ end
 
 function move_bait()
     local items = windower.ffxi.get_items()
-    local empty = items.max_inventory
     message(2, 'checking inventory space')
-    for _,item in pairs(items.inventory) do
-        if item.id ~= 0 then
-            empty = empty - 1
-        end
-    end
-    message(3, 'inventory empty: %d, max: %d':format(empty, items.max_inventory))
+    local empty = items.max_inventory - items.count_inventory
+    message(3, 'inventory count: %d, max: %d':format(items.count_inventory, items.max_inventory))
     local count = 20
     if empty < 2 then
         return false
@@ -516,7 +502,22 @@ function fisher_command(...)
         settings:save()
         fish_bite_id = nil
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
+        check_fatigued()
         windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
+    elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
+        local count = tonumber(arg[2])
+        if count == nil then
+            windower.add_to_chat(167, 'invalid count')
+        elseif count < 0 then
+            check_fatigued()
+            settings.fatigue.remaining = settings.fatigue.remaining + count
+            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            settings:save()
+        else
+            settings.fatigue.remaining = count
+            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            settings:save()
+        end
     else
         windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
         windower.add_to_chat(167, '        fisher restart')
@@ -527,6 +528,7 @@ function fisher_command(...)
         windower.add_to_chat(167, '        fisher move <on/off>')
         windower.add_to_chat(167, '        fisher reset')
         windower.add_to_chat(167, '        fisher stats')
+        windower.add_to_chat(167, '        fisher fatigue <count>')
     end
 end
 

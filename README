@@ -58,3 +58,5 @@ The available commands are:
         Clears all known bite IDs from settings file.
     fisher stats
         Displays stats about your fishing.
+    fisher fatigue <count>
+        Sets catches until fatigued.
