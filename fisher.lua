@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.7.0'
+_addon.version = '2.8.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -502,14 +502,36 @@ function fisher_command(...)
         settings:save()
         fish_bite_id = nil
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
-        check_fatigued()
-        windower.add_to_chat(200, 'casts: %d, bites: %d, catches: %d, remaining fatigue: %d':format(cast_count, bite_count, catch_count, settings.fatigue.remaining))
+        local break_count = bite_count - catch_count
+        local bite_rate = 0
+        local break_rate = 0
+        local catch_rate = 0
+        if cast_count ~= 0 then
+            bite_rate = (bite_count / cast_count) * 100
+            break_rate = (break_count / cast_count) * 100
+            catch_rate = (catch_count / cast_count) * 100
+        end
+        local break_bite_rate = 0
+        local catch_bite_rate = 0
+        if bite_count ~= 0 then
+            break_bite_rate = (break_count / bite_count) * 100
+            catch_bite_rate = (catch_count / bite_count) * 100
+        end
+        if running == false then
+            check_fatigued()
+        end
+        windower.add_to_chat(200, 'casts: %d, bites: %d, breaks: %d, catches: %d':format(cast_count, bite_count, break_count, catch_count))
+        windower.add_to_chat(200, 'bite rate: %d%%, break rate: %d%%, catch rate: %d%%':format(bite_rate, break_rate, catch_rate))
+        windower.add_to_chat(200, 'break/bite rate: %d%%, catch/bite rate: %d%%':format(break_bite_rate, catch_bite_rate))
+        windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then
             windower.add_to_chat(167, 'invalid count')
         elseif count < 0 then
-            check_fatigued()
+            if running == false then
+                check_fatigued()
+            end
             settings.fatigue.remaining = settings.fatigue.remaining + count
             windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save()
