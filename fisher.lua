@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.8.0'
+_addon.version = '2.8.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -117,19 +117,19 @@ function check_bait()
 end
 
 function equip_bait()
-    for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
-        if item.id == bait_id and item.status == 0 then
-            message(1, 'equipping bait')
-            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3, 8)
-            return true
-        end
-    end
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if item.id == bait_id and item.status == 0 then
             message(1, 'equipping bait')
             message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3, 0)
+            return true
+        end
+    end
+    for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
+        if item.id == bait_id and item.status == 0 then
+            message(1, 'equipping bait')
+            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
+            windower.ffxi.set_equip(slot, 3, 8)
             return true
         end
     end
