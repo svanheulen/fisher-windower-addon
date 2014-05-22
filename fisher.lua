@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.8.1'
+_addon.version = '2.8.2'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -520,10 +520,10 @@ function fisher_command(...)
         if running == false then
             check_fatigued()
         end
-        windower.add_to_chat(200, 'casts: %d, bites: %d, breaks: %d, catches: %d':format(cast_count, bite_count, break_count, catch_count))
-        windower.add_to_chat(200, 'bite rate: %d%%, break rate: %d%%, catch rate: %d%%':format(bite_rate, break_rate, catch_rate))
-        windower.add_to_chat(200, 'break/bite rate: %d%%, catch/bite rate: %d%%':format(break_bite_rate, catch_bite_rate))
-        windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+        windower.add_to_chat(200, 'casts: %d, remaining fatigue: %d':format(cast_count, settings.fatigue.remaining))
+        windower.add_to_chat(200, 'bites: %d, bite rate: %d%%':format(bite_count, bite_rate))
+        windower.add_to_chat(200, 'catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(catch_count, catch_rate, catch_bite_rate))
+        windower.add_to_chat(200, 'breaks: %d, break rate: %d%%, break/bite rate: %d%%':format(break_count, break_rate, break_bite_rate))
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then
