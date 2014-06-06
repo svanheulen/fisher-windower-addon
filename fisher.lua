@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '2.8.2'
+_addon.version = '2.8.3'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -406,6 +406,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
             if original:unpack('H', 11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:hex())
                 error_retry = true
+                last_item_id = nil
             else
                 message(0, 'outgoing command')
                 fisher_command('stop')
