@@ -30,6 +30,7 @@ require('lists')
 require('pack')
 require('sets')
 require('strings')
+require('tables')
 
 -- default settings
 
@@ -48,11 +49,9 @@ defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
 defaults.fish = {}
 
-settings = config.load('data/%s.xml':format(windower.ffxi.get_player().name), defaults)
-
 -- global variables
 
-catch = {small=T{}, large=T{}, item=T{}, monster=false}
+fish = T{}
 bait = S{}
 stats = {casts=0, bites=0, catches=0}
 
@@ -62,9 +61,7 @@ log_file = nil
 -- global constants
 
 messages = {}
-messages.small = S{7028}
-messages.large = S{7070}
-messages.item = S{7071}
+messages.fish = S{7028, 7070, 7071}
 messages.monster = S{7072}
 messages.senses = S{7073}
 messages.time = S{7060}
@@ -149,7 +146,7 @@ function move_fish()
     end
     local moved = 0
     for slot,item in pairs(items.inventory) do
-        if (catch.small[item.id] or catch.large[item.id] or catch.item[item.id]) and item.status == 0 then
+        if fish[item.id] ~= nil and item.status == 0 then
             if empty_satchel > 0 then
                 windower.ffxi.put_item(5, slot, item.count)
                 empty_satchel = empty_satchel - 1
@@ -235,10 +232,10 @@ function get_bite_id(id)
 end
 
 function update_fish()
-    if catch[current.type][current.item_id] ~= nil then
-        catch[current.type][current.item_id].bite_id = current.bite_id
-    elseif catch[current.type]:with('bite_id', current.bite_id) ~= nil then
-        catch[current.type]:with('bite_id', current.bite_id).bite_id = nil
+    if fish[current.item_id] ~= nil then
+        fish[current.item_id].bite_id = current.bite_id
+    elseif fish:with('bite_id', current.bite_id) then
+        fish:with('bite_id', current.bite_id).bite_id = nil
     end
     settings.fish[tostring(current.bite_id)] = current.item_id
     settings:save('all')
@@ -323,17 +320,11 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x36 then
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages.small:contains(message_id) then
-                current.type = 'small'
-                stats.bites = stats.bites + 1
-            elseif messages.large:contains(message_id) then
-                current.type = 'large'
-                stats.bites = stats.bites + 1
-            elseif messages.item:contains(message_id) then
-                current.type = 'item'
+            if messages.fish:contains(message_id) then
+                current.monster = false
                 stats.bites = stats.bites + 1
             elseif messages.monster:contains(message_id) then
-                current.type = 'monster'
+                current.monster = true
                 stats.bites = stats.bites + 1
             elseif messages.time:contains(message_id) then
                 catch(stats.casts)
@@ -346,17 +337,17 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             end
         elseif id == 0x115 then
             current.bite_id = original:unpack('I', 11)
-            if (current.type == 'monster' and catch.monster) or (current.type ~= 'monster' and catch[current.type]:with('bite_id', current.bite_id)) then
+            if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
-                windower.send_command('wait %d; lua i fisher catch %d':format(catch[current.type]:with('bite_id', current.bite_id).delay, stats.casts))
-            elseif current.type ~= 'monster' and catch[current.type]:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
+                windower.send_command('wait %d; lua i fisher catch %d':format(fish:with('bite_id', current.bite_id).delay, stats.casts))
+            elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
             else
                 windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages.catch:contains(message_id) then
+            if messages.fish:contains(message_id) then
                 current.item_id = original:unpack('I', 17)
                 current.count = 1
                 stats.catches = stats.catches + 1
@@ -390,54 +381,51 @@ function check_logout(name)
     settings:save('all')
 end
 
+function check_load()
+    if windower.ffxi.get_info().logged_in then
+        settings = config.load('data/%s.xml':format(windower.ffxi.get_player().name), defaults)
+    end
+end
+
+function check_unload()
+    settings:save('all')
+end
+
 -- command functions
 
 function fish_command(arg)
-    if #arg > 2 and arg[2]:lower() == 'add' then
-        local bite_type = arg[3]:lower()
-        if #arg == 5 and (bite_type == 'small' or bite_type == 'large' or bite_type == 'item') then
-            local item_id = tonumber(arg[4])
+    if #arg == 4 and arg[2]:lower() == 'add' then
+        local item_id = tonumber(arg[3])
+        if item_id == nil then
+            _,item_id = res.items:with('name', arg[3])
             if item_id == nil then
-                _,item_id = res.items:with('name', arg[4])
-                if item_id == nil then
-                    -- error
-                    return
-                end
-            end
-            local delay = tonumber(arg[5])
-            if delay == nil then
                 -- error
                 return
             end
-            catch[bite_type][item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
-        elseif #arg == 3 and bite_type == 'monster' then
-            catch.monster = true
-        else
-            -- error
         end
-    elseif #arg > 2 and arg[2]:lower() == 'remove' then
-        local bite_type = arg[3]:lower()
-        if #arg == 4 and (bite_type == 'small' or bite_type == 'large' or bite_type == 'item') then
-            if arg[4]:lower() == '*' then
-                catch[bite_type]:clear()
+        local delay = tonumber(arg[4])
+        if delay == nil then
+            -- error
+            return
+        end
+        fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
+    elseif #arg == 3 and arg[2]:lower() == 'remove' then
+        if arg[3]:lower() == '*' then
+            fish:clear()
+            return
+        end
+        local item_id = tonumber(arg[3])
+        if item_id == nil then
+            _,item_id = res.items:with('name', arg[3])
+            if item_id == nil then
+                -- error
                 return
             end
-            local item_id = tonumber(arg[4])
-            if item_id == nil then
-                _,item_id = res.items:with('name', arg[4])
-                if item_id == nil then
-                    -- error
-                    return
-                end
-            end
-            catch[bite_type]:delete(item_id)
-        elseif #arg == 3 and bite_type == '*' then
-            catch.small:clear()
-            catch.large:clear()
-            catch.item:clear()
-            catch.monster = false
-        else
-            -- error
+        end
+        fish:remove(item_id)
+    elseif #arg == 2 and arg[2]:lower() == 'list' then
+        for item_id,value in pairs(fish) do
+            windower.add_to_chat(207, 'name: %s, item id: %d, delay: %d, bite id: %d':format(res.items[item_id].name, item_id, value.delay, value.bite_id))
         end
     end
 end
@@ -467,17 +455,25 @@ function bait_command(arg)
             end
         end
         bait:remove(item_id)
+    elseif #arg == 2 and arg[2]:lower() == 'list' then
+        for item_id,_ in pairs(bait) do
+            windower.add_to_chat(207, 'name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        end
     end
 end
 
 function fisher_command(...)
-    if #arg > 2 and arg[1]:lower() == 'fish' then
+    if #arg > 1 and arg[1]:lower() == 'fish' then
         fish_command(arg)
-    elseif #arg == 3 and arg[1]:lower() == 'bait' then
+    elseif #arg > 1 and arg[1]:lower() == 'bait' then
         bait_command(arg)
     elseif #arg == 1 and arg[1]:lower() == 'start' then
         if running then
             windower.add_to_chat(167, 'already fishing')
+            return
+        end
+        if fish:empty() or bait:empty() then
+            -- error
             return
         end
         error_retry = true
@@ -558,16 +554,7 @@ function fisher_command(...)
             settings:save('all')
         end
     else
-        windower.add_to_chat(167, 'usage: fisher start <bait> <fish> <catch delay>')
-        windower.add_to_chat(167, '        fisher restart')
-        windower.add_to_chat(167, '        fisher stop')
-        windower.add_to_chat(167, '        fisher chat <level>')
-        windower.add_to_chat(167, '        fisher log <level>')
-        windower.add_to_chat(167, '        fisher equip <on/off>')
-        windower.add_to_chat(167, '        fisher move <on/off>')
-        windower.add_to_chat(167, '        fisher reset')
-        windower.add_to_chat(167, '        fisher stats')
-        windower.add_to_chat(167, '        fisher fatigue <count>')
+        -- usage info
     end
 end
 
@@ -581,4 +568,6 @@ windower.register_event('incoming chunk', check_incoming_chunk)
 windower.register_event('outgoing chunk', check_outgoing_chunk)
 windower.register_event('login', check_login)
 windower.register_event('logout', check_logout)
+windower.register_event('load', check_load)
+windower.register_event('unload', check_unload)
 windower.register_event('addon command', fisher_command)
