@@ -24,13 +24,8 @@ _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
 -- modules
 
-config = require('config')
-res = require('resources')
-require('lists')
+require('luau')
 require('pack')
-require('sets')
-require('strings')
-require('tables')
 
 -- default settings
 
@@ -67,43 +62,11 @@ messages.senses = S{7073}
 messages.time = S{7060}
 messages.catch = S{7025, 7030, 7034, 7048, 7059}
 
--- debug and logging functions
-
-function message(level, message)
-    local prefix = 'E'
-    local color = 167
-    if level == 1 then
-        prefix = 'W'
-        color = 200
-    elseif level == 2 then
-        prefix = 'I'
-        color = 207
-    elseif level == 3 then
-        prefix = 'D'
-        color = 160
-    end
-    if settings.log >= level then
-        if log_file == nil then
-            log_file = io.open('%sdata/%s.log':format(windower.addon_path, windower.ffxi.get_player().name), 'a')
-        end
-        if log_file == nil then
-            settings.log = -1
-            windower.add_to_chat(167, 'unable to open log file')
-        else
-            log_file:write('%s | %s | %s\n':format(os.date(), prefix, message))
-            log_file:flush()
-        end
-    end
-    if settings.chat >= level then
-        windower.add_to_chat(color, message)
-    end
-end
-
 -- bait helper functions
 
 function check_bait()
     local items = windower.ffxi.get_items()
-    message(2, 'checking bait')
+    notice('checking equipped bait')
     if items.equipment.ammo == 0 then
         return false
     elseif items.equipment.ammo_bag == 0 then
@@ -116,12 +79,14 @@ end
 function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if bait:contains(item.id) and item.status == 0 then
+            notice('equipping bait')
             windower.ffxi.set_equip(slot, 3, 0)
             return true
         end
     end
     for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
         if bait:contains(item.id) and item.status == 0 then
+            notice('equipping bait')
             windower.ffxi.set_equip(slot, 3, 8)
             return true
         end
@@ -133,17 +98,20 @@ end
 
 function check_inventory()
     local items = windower.ffxi.get_items()
+    notice('checking inventory space')
     return (items.max_inventory - items.count_inventory) > 1
 end
 
 function move_fish()
     local items = windower.ffxi.get_items()
+    notice('checking bag space')
     local empty_satchel = items.max_satchel - items.count_satchel
     local empty_sack = items.max_sack - items.count_sack
     local empty_case = items.max_case - items.count_case
     if (empty_satchel + empty_sack + empty_case) == 0 then
         return false
     end
+    notice('moving fish to bags')
     local moved = 0
     for slot,item in pairs(items.inventory) do
         if fish[item.id] ~= nil and item.status == 0 then
@@ -167,6 +135,7 @@ end
 
 function move_bait()
     local items = windower.ffxi.get_items()
+    notice('checking inventory space')
     local empty = items.max_inventory - items.count_inventory
     local count = 20
     if empty < 2 then
@@ -174,6 +143,7 @@ function move_bait()
     elseif empty <= count then
         count = math.floor(empty / 2)
     end
+    notice('moving bait to inventory')
     local moved = 0
     for slot,item in pairs(items.satchel) do
         if bait:contains(item.id) and count > 0 then
@@ -203,12 +173,14 @@ end
 
 function check_fatigued()
     update_day()
+    notice('checking fishing fatigue')
     return settings.fatigue.remaining == 0
 end
 
 function update_day()
     local today = os.date('!%Y-%m-%d', os.time() + 32400)
     if settings.fatigue.date ~= today then
+        notice('resetting fishing fatigue')
         settings.fatigue.date = today
         settings.fatigue.remaining = 200
         settings:save('all')
@@ -216,6 +188,7 @@ function update_day()
 end
 
 function update_fatigue()
+    notice('updating fishing fatigue')
     settings.fatigue.remaining = settings.fatigue.remaining - current.count
     update_fish()
 end
@@ -223,6 +196,7 @@ end
 -- fish id helper functions
 
 function get_bite_id(id)
+    notice('searching for bite id')
     for bite_id,item_id in pairs(settings.fish) do
         if item_id == id then
             return tonumber(bite_id)
@@ -232,6 +206,7 @@ function get_bite_id(id)
 end
 
 function update_fish()
+    notice('updating fish database')
     if fish[current.item_id] ~= nil then
         fish[current.item_id].bite_id = current.bite_id
     elseif fish:with('bite_id', current.bite_id) then
@@ -246,6 +221,7 @@ end
 function catch(casts)
     if running and stats.casts == tonumber(casts) then
         local player = windower.ffxi.get_player()
+        notice('sending catch command')
         windower.packets.inject_outgoing(0x110, 'IIIHH':pack(0xB10, player.id, 0, player.index, 3) .. current.key)
     end
 end
@@ -253,6 +229,7 @@ end
 function release(casts)
     if running and stats.casts == tonumber(casts) then
         local player = windower.ffxi.get_player()
+        notice('sending release command')
         windower.packets.inject_outgoing(0x110, 'IIIHHI':pack(0xB10, player.id, 200, player.index, 3, 0))
     end
 end
@@ -260,20 +237,24 @@ end
 function cast()
     if running then
         if check_fatigued() then
+            error('reached fishing fatigue')
             fisher_command('stop')
         elseif check_inventory() then
             if check_bait() then
+                notice('casting fishing rod')
                 windower.send_command('input /fish')
             elseif settings.equip and equip_bait() then
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.equip))
             elseif settings.move and move_bait() then
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
             else
+                error('out of bait')
                 fisher_command('stop')
             end
         elseif settings.move and move_fish() then
             windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
         else
+            error('inventory is full')
             fisher_command('stop')
         end
     end
@@ -286,6 +267,7 @@ function check_action(action)
         local player_id = windower.ffxi.get_player().id
         for _,target in pairs(action.targets) do
             if target.id == player_id then
+                error('action performed on you')
                 fisher_command('stop')
                 return
             end
@@ -295,12 +277,14 @@ end
 
 function check_status_change(new_status_id, old_status_id)
     if running and new_status_id ~= 0 and new_status_id ~= 50 then
+        error('status was changed')
         fisher_command('stop')
     end
 end
 
 function check_chat_message(message, sender, mode, gm)
     if running and gm then
+        error('received message from gm')
         fisher_command('stop')
     end
 end
@@ -311,6 +295,7 @@ function check_incoming_text(original, modified, original_mode, modified_mode, b
             error_retry = false
             windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
         else
+            error('unable to fish')
             fisher_command('stop')
         end
     end
@@ -365,6 +350,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 stats.casts = stats.casts + 1
                 error_retry = true
             else
+                error('performed an action')
                 fisher_command('stop')
             end
         elseif id == 0x110 and original:byte(15) == 4 then
@@ -399,13 +385,13 @@ function fish_command(arg)
         if item_id == nil then
             _,item_id = res.items:with('name', arg[3])
             if item_id == nil then
-                -- error
+                error('invalid fish name or item id')
                 return
             end
         end
         local delay = tonumber(arg[4])
         if delay == nil then
-            -- error
+            error('invalid cast delay time')
             return
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
@@ -418,7 +404,7 @@ function fish_command(arg)
         if item_id == nil then
             _,item_id = res.items:with('name', arg[3])
             if item_id == nil then
-                -- error
+                error('invalid fish name or item id')
                 return
             end
         end
@@ -436,7 +422,7 @@ function bait_command(arg)
         if item_id == nil then
             _,item_id = res.items:with('name', arg[3])
             if item_id == nil then
-                -- error
+                error('invalid bait name or item id')
                 return
             end
         end
@@ -450,7 +436,7 @@ function bait_command(arg)
         if item_id == nil then
             _,item_id = res.items:with('name', arg[3])
             if item_id == nil then
-                -- error
+                error('invalid bait name or item id')
                 return
             end
         end
@@ -469,11 +455,11 @@ function fisher_command(...)
         bait_command(arg)
     elseif #arg == 1 and arg[1]:lower() == 'start' then
         if running then
-            windower.add_to_chat(167, 'already fishing')
+            error('already fishing')
             return
         end
         if fish:empty() or bait:empty() then
-            -- error
+            error('no fish or bait configured')
             return
         end
         error_retry = true
@@ -481,7 +467,7 @@ function fisher_command(...)
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
         if not running then
-            windower.add_to_chat(167, 'not fishing')
+            error('not fishing')
             return
         end
         running = false
@@ -491,11 +477,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         settings.chat = tonumber(arg[2]) or 1
-        windower.add_to_chat(200, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
+        notice('chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
-        windower.add_to_chat(200, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
+        notice('log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
         settings:save('all')
         if settings.log < 0 and log_file ~= nil then
             log_file:close()
@@ -503,17 +489,17 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
-        windower.add_to_chat(200, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
+        notice('equip bait: %s':format(settings.equip and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'move' then
         settings.move = (arg[2]:lower() == 'on')
-        windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
+        notice('move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 1 and arg[1]:lower() == 'reset' then
-        windower.add_to_chat(200, 'resetting fish database')
+        notice('resetting fish database')
         settings.fish = {}
         settings:save('all')
-        fisher_command('fish', 'remove', '*')
+        catch:clear()
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         local losses = stats.bites - stats.catches
         local bite_rate = 0
@@ -533,28 +519,28 @@ function fisher_command(...)
         if running == false then
             update_day()
         end
-        windower.add_to_chat(200, 'casts: %d, remaining fatigue: %d':format(stats.casts, settings.fatigue.remaining))
-        windower.add_to_chat(200, 'bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
-        windower.add_to_chat(200, 'catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
-        windower.add_to_chat(200, 'losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
+        notice('casts: %d, remaining fatigue: %d':format(stats.casts, settings.fatigue.remaining))
+        notice('bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
+        notice('catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
+        notice('losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then
-            windower.add_to_chat(167, 'invalid count')
+            error('invalid count')
         elseif count < 0 then
             if running == false then
                 update_day()
             end
             settings.fatigue.remaining = settings.fatigue.remaining + count
-            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            notice('remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save('all')
         else
             settings.fatigue.remaining = count
-            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            notice('remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save('all')
         end
     else
-        -- usage info
+        error('usage info')
     end
 end
 
