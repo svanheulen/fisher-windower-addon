@@ -316,10 +316,12 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             local message_id = original:unpack('H', 27) % 0x8000
             if messages.senses:contains(message_id) then
                 current.item_id = original:unpack('I', 9)
-                update_fish()
             end
         elseif id == 0x115 then
             current.bite_id = original:unpack('I', 11)
+            if current.item_id ~= nil then
+                update_fish()
+            end
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
