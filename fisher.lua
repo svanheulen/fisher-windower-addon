@@ -307,10 +307,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             local message_id = original:unpack('H', 11) % 0x8000
             if messages.fish:contains(message_id) then
                 current.monster = false
-                stats.bites = stats.bites + 1
             elseif messages.monster:contains(message_id) then
                 current.monster = true
-                stats.bites = stats.bites + 1
             elseif messages.time:contains(message_id) then
                 catch(stats.casts)
             end
@@ -324,6 +322,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             current.bite_id = original:unpack('I', 11)
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
+                stats.bites = stats.bites + 1
                 windower.send_command('wait %d; lua i fisher catch %d':format(fish:with('bite_id', current.bite_id).delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
