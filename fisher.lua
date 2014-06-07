@@ -332,7 +332,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages.fish:contains(message_id) then
+            if messages.catch:contains(message_id) then
                 current.item_id = original:unpack('I', 17)
                 current.count = 1
                 stats.catches = stats.catches + 1
@@ -411,7 +411,7 @@ function fish_command(arg)
         fish:remove(item_id)
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         for item_id,value in pairs(fish) do
-            windower.add_to_chat(207, 'name: %s, item id: %d, delay: %d, bite id: %d':format(res.items[item_id].name, item_id, value.delay, value.bite_id))
+            notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, value.delay, value.bite_id or 'unknown'))
         end
     end
 end
@@ -443,7 +443,7 @@ function bait_command(arg)
         bait:remove(item_id)
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         for item_id,_ in pairs(bait) do
-            windower.add_to_chat(207, 'name: %s, item id: %d':format(res.items[item_id].name, item_id))
+            notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
         end
     end
 end
@@ -510,7 +510,7 @@ function fisher_command(...)
             loss_rate = (losses / stats.casts) * 100
             catch_rate = (stats.catches / stats.casts) * 100
         end
-        local lost_bite_rate = 0
+        local loss_bite_rate = 0
         local catch_bite_rate = 0
         if stats.bites ~= 0 then
             loss_bite_rate = (losses / stats.bites) * 100
