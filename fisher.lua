@@ -30,8 +30,6 @@ require('pack')
 -- default settings
 
 defaults = {}
-defaults.chat = 1
-defaults.log = -1
 defaults.equip = false
 defaults.move = false
 defaults.delay = {}
@@ -51,16 +49,15 @@ bait = S{}
 stats = {casts=0, bites=0, catches=0}
 
 running = false
-log_file = nil
 
 -- global constants
 
 messages = {}
-messages.fish = S{7028, 7070, 7071}
-messages.monster = S{7072}
-messages.senses = S{7073}
-messages.time = S{7060}
-messages.catch = S{7025, 7030, 7034, 7048, 7059}
+messages.fish = S{7028, 7070, 7071, 7675, 7717, 7718, 6862, 6904, 6905}
+messages.monster = S{7072, 7719, 6906}
+messages.senses = S{7073, 7720, 6907}
+messages.time = S{7060, 7707, 6894}
+messages.catch = S{7025, 7030, 7034, 7048, 7059, 7672, 7677, 7681, 7695, 7706, 6859, 6864, 6868, 6882, 6893}
 
 -- bait helper functions
 
@@ -79,14 +76,14 @@ end
 function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if bait:contains(item.id) and item.status == 0 then
-            notice('equipping bait')
+            warning('equipping bait')
             windower.ffxi.set_equip(slot, 3, 0)
             return true
         end
     end
     for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
         if bait:contains(item.id) and item.status == 0 then
-            notice('equipping bait')
+            warning('equipping bait')
             windower.ffxi.set_equip(slot, 3, 8)
             return true
         end
@@ -111,7 +108,7 @@ function move_fish()
     if (empty_satchel + empty_sack + empty_case) == 0 then
         return false
     end
-    notice('moving fish to bags')
+    warning('moving fish to bags')
     local moved = 0
     for slot,item in pairs(items.inventory) do
         if fish[item.id] ~= nil and item.status == 0 then
@@ -143,7 +140,7 @@ function move_bait()
     elseif empty <= count then
         count = math.floor(empty / 2)
     end
-    notice('moving bait to inventory')
+    warning('moving bait to inventory')
     local moved = 0
     for slot,item in pairs(items.satchel) do
         if bait:contains(item.id) and count > 0 then
@@ -221,7 +218,7 @@ end
 function catch(casts)
     if running and stats.casts == tonumber(casts) then
         local player = windower.ffxi.get_player()
-        notice('sending catch command')
+        warning('sending catch command')
         windower.packets.inject_outgoing(0x110, 'IIIHH':pack(0xB10, player.id, 0, player.index, 3) .. current.key)
     end
 end
@@ -229,7 +226,7 @@ end
 function release(casts)
     if running and stats.casts == tonumber(casts) then
         local player = windower.ffxi.get_player()
-        notice('sending release command')
+        warning('sending release command')
         windower.packets.inject_outgoing(0x110, 'IIIHHI':pack(0xB10, player.id, 200, player.index, 3, 0))
     end
 end
@@ -241,7 +238,7 @@ function cast()
             fisher_command('stop')
         elseif check_inventory() then
             if check_bait() then
-                notice('casting fishing rod')
+                warning('casting fishing rod')
                 windower.send_command('input /fish')
             elseif settings.equip and equip_bait() then
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.equip))
@@ -409,7 +406,7 @@ function fish_command(arg)
                 return
             end
         end
-        fish:remove(item_id)
+        fish[item_id] = nil
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         for item_id,value in pairs(fish) do
             notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, value.delay, value.bite_id or 'unknown'))
@@ -476,18 +473,6 @@ function fisher_command(...)
             log_file:close()
             log_file = nil
         end
-    elseif #arg == 2 and arg[1]:lower() == 'chat' then
-        settings.chat = tonumber(arg[2]) or 1
-        notice('chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
-        settings:save('all')
-    elseif #arg == 2 and arg[1]:lower() == 'log' then
-        settings.log = tonumber(arg[2]) or -1
-        notice('log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
-        settings:save('all')
-        if settings.log < 0 and log_file ~= nil then
-            log_file:close()
-            log_file = nil
-        end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
         notice('equip bait: %s':format(settings.equip and 'on' or 'off'))
@@ -500,7 +485,7 @@ function fisher_command(...)
         notice('resetting fish database')
         settings.fish = {}
         settings:save('all')
-        catch:clear()
+        fish:clear()
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         local losses = stats.bites - stats.catches
         local bite_rate = 0
