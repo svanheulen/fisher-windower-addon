@@ -470,6 +470,10 @@ function bait_command(arg)
 end
 
 function fisher_command(...)
+    if windower.ffxi.get_info().logged_in == false then
+        error('not logged in')
+        return
+    end
     if #arg >= 1 and arg[1]:lower() == 'fish' then
         fish_command(arg)
     elseif #arg >= 1 and arg[1]:lower() == 'bait' then
