@@ -17,9 +17,10 @@ delay time and then injects a packet that tells the server the fish has
 zero HP and you're pulling it up. When you start fishing, you need to
 use the exact spelling and capitalization (quoted when spaces are
 needed) the game uses for the bait and fish OR use item IDs. If the bite
-ID for the fish is unknown it will catch every unknown fish/item/monster
-using a very long catch delay until it finds the correct bite ID. You
-can also cancel a fish on the line normally at any time.
+ID for the fish is unknown it will catch every unknown fish or item (but
+not monsters) using a very long catch delay until it finds the correct
+bite ID. You can also cancel a fish on the line normally at any time.
+
 
 IMPORTANT NOTE:
 Setting a reasonable catch delay is very important. This is the time it
@@ -39,6 +40,7 @@ Fisher will automatically stop running under the following conditions:
     You perform an action.
     You change zones.
     You get a "You cannot fish here." error multiple times in a row.
+    You get an error when attempting to cast (such as no rod/bait).
 
 To install this addon, create a folder called "fisher" inside the
 Windower addons folder and copy the fisher.lua file there. Your addon
@@ -48,23 +50,35 @@ To load the addon, in the Final Fantasy XI input line, type:
     //lua load fisher
 
 The available commands are:
-    fisher start <bait> <fish> <catch delay>
-        Starts fishing. (bait/fish can be an ID or the name)
-    fisher restart
-        Starts fishing using settings from the last "start" command.
+    fisher fish ...
+        fisher fish add <name or item id> <catch delay>
+            Adds to the list of fish to catch.
+        fisher fish remove <name or item id>
+            Removes from the list of fish to catch.
+        fisher fish remove *
+            Clears the list of fish to catch.
+        fisher fish list
+            Displays the list of fish to catch.
+    fisher bait ...
+        fisher bait add <name or item id>
+            Adds to the list of bait to use.
+        fisher bait remove <name or item id>
+            Removes from the list of bait to use.
+        fisher bait remove *
+            Clears the list of bait to use.
+        fisher bait list
+            Displays the list of bait to use.
+    fisher start
+        Starts fishing.
     fisher stop
         Stops fishing.
-    fisher chat <level>
-        Sets the level of detail for output to the chat. (default: 1)
-    fisher log <level>
-        Sets the level of detail for output to the log file. (default: off)
     fisher equip <on/off>
         Turns on/off auto-equipping of bait. (default: off)
     fisher move <on/off>
         Turns on/off auto-moving of bait/fish between bags. (default: off)
-    fisher reset
-        Clears all known bite IDs from settings file.
-    fisher stats
-        Displays stats about your fishing.
     fisher fatigue <count>
         Sets catches until fatigued.
+    fisher stats
+        Displays stats about your fishing.
+    fisher reset
+        Clears all known bite IDs from settings file.
