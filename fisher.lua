@@ -193,7 +193,6 @@ end
 -- fish id helper functions
 
 function get_bite_id(id)
-    notice('searching for bite id')
     for bite_id,item_id in pairs(settings.fish) do
         if item_id == id then
             return tonumber(bite_id)
@@ -393,8 +392,10 @@ function fish_command(arg)
             return
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
+        notice('added fish, name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish.bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
+            notice('removed all fish')
             fish:clear()
             return
         end
@@ -407,10 +408,20 @@ function fish_command(arg)
             end
         end
         fish[item_id] = nil
+        notice('removed fish, name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
+        if fish:length() == 0 then
+            notice('fish list is empty')
+            return
+        end
         for item_id,value in pairs(fish) do
             notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, value.delay, value.bite_id or 'unknown'))
         end
+    else
+        error('fisher fish add <name or item id> <catch delay>')
+        error('fisher fish remove <name or item id>')
+        error('fisher fish remove *')
+        error('fisher fish list')
     end
 end
 
@@ -425,8 +436,10 @@ function bait_command(arg)
             end
         end
         bait:add(item_id)
+        notice('added bait, name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
+            notice('removed all bait')
             bait:clear()
             return
         end
@@ -439,17 +452,27 @@ function bait_command(arg)
             end
         end
         bait:remove(item_id)
+        notice('removed bait, name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
+        if bait:length() == 0 then
+            notice('bait list is empty')
+            return
+        end
         for item_id,_ in pairs(bait) do
             notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
         end
+    else
+        error('fisher bait add <name or item id>')
+        error('fisher bait remove <name or item id>')
+        error('fisher bait remove *')
+        error('fisher bait list')
     end
 end
 
 function fisher_command(...)
-    if #arg > 1 and arg[1]:lower() == 'fish' then
+    if #arg >= 1 and arg[1]:lower() == 'fish' then
         fish_command(arg)
-    elseif #arg > 1 and arg[1]:lower() == 'bait' then
+    elseif #arg >= 1 and arg[1]:lower() == 'bait' then
         bait_command(arg)
     elseif #arg == 1 and arg[1]:lower() == 'start' then
         if running then
@@ -462,6 +485,7 @@ function fisher_command(...)
         end
         error_retry = true
         running = true
+        warning('started fishing')
         cast()
     elseif #arg == 1 and arg[1]:lower() == 'stop' then
         if not running then
@@ -469,10 +493,7 @@ function fisher_command(...)
             return
         end
         running = false
-        if log_file ~= nil then
-            log_file:close()
-            log_file = nil
-        end
+        warning('stopped fishing')
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
         notice('equip bait: %s':format(settings.equip and 'on' or 'off'))
@@ -526,7 +547,15 @@ function fisher_command(...)
             settings:save('all')
         end
     else
-        error('usage info')
+        error('fisher fish ...')
+        error('fisher bait ...')
+        error('fisher start')
+        error('fisher stop')
+        error('fisher equip <on/off>')
+        error('fisher move <on/off>')
+        error('fisher fatigue <count>')
+        error('fisher stats')
+        error('fisher reset')
     end
 end
 
