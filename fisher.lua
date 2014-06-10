@@ -50,14 +50,9 @@ stats = {casts=0, bites=0, catches=0}
 
 running = false
 
--- global constants
+-- load message constants
 
-messages = {}
-messages.fish = S{7028, 7070, 7071, 7675, 7717, 7718, 6862, 6904, 6905}
-messages.monster = S{7072, 7719, 6906}
-messages.senses = S{7073, 7720, 6907}
-messages.time = S{7060, 7707, 6894}
-messages.catch = S{7025, 7030, 7034, 7048, 7059, 7672, 7677, 7681, 7695, 7706, 6859, 6864, 6868, 6882, 6893}
+require('messages')
 
 -- bait helper functions
 
@@ -300,17 +295,19 @@ end
 function check_incoming_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x36 then
+            local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages.fish:contains(message_id) then
+            if messages[zone_id].fish:contains(message_id) then
                 current.monster = false
-            elseif messages.monster:contains(message_id) then
+            elseif messages[zone_id].monster == message_id then
                 current.monster = true
-            elseif messages.time:contains(message_id) then
+            elseif messages[zone_id].time == message_id then
                 catch(stats.casts)
             end
         elseif id == 0x2A then
+            local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 27) % 0x8000
-            if messages.senses:contains(message_id) then
+            if messages[zone_id].senses == message_id then
                 current.item_id = original:unpack('I', 9)
             end
         elseif id == 0x115 then
@@ -328,8 +325,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
+            local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages.catch:contains(message_id) then
+            if messages[zone_id].caught:contains(message_id) then
                 current.item_id = original:unpack('I', 17)
                 current.count = 1
                 stats.catches = stats.catches + 1
