@@ -40,7 +40,6 @@ Fisher will automatically stop running under the following conditions:
     You perform an action.
     You change zones.
     You get a "You cannot fish here." error multiple times in a row.
-    You get an error when attempting to cast (such as no rod/bait).
 
 To install this addon, create a folder called "fisher" inside the
 Windower addons folder and copy the fisher.lua file there. Your addon
@@ -77,8 +76,8 @@ The available commands are:
     fisher move <on/off>
         Turns on/off auto-moving of bait/fish between bags. (default: off)
     fisher fatigue <count>
-        Sets catches until fatigued.
-    fisher stats
+        Sets remaining catches until fatigued.
+    fisher stats [clear]
         Displays stats about your fishing.
-    fisher reset
+    fisher resetdb
         Clears all known bite IDs from settings file.

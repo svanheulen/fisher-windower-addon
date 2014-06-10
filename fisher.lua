@@ -297,7 +297,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
         if id == 0x36 then
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages[zone_id].fish:contains(message_id) then
+            if messages[zone_id].small == message_id or messages[zone_id].large == message_id or messages[zone_id].item == message_id then
                 current.monster = false
             elseif messages[zone_id].monster == message_id then
                 current.monster = true
@@ -327,7 +327,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages[zone_id].caught:contains(message_id) then
+            if messages[zone_id].caught == message_id or messages[zone_id].full == message_id then
                 current.item_id = original:unpack('I', 17)
                 current.count = 1
                 stats.catches = stats.catches + 1
@@ -390,7 +390,8 @@ function fish_command(arg)
             return
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
-        notice('added fish, name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish.bite_id or 'unknown'))
+        notice('added fish:')
+        notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish.bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
             notice('removed all fish')
@@ -406,12 +407,10 @@ function fish_command(arg)
             end
         end
         fish[item_id] = nil
-        notice('removed fish, name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        notice('removed fish:')
+        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
-        if fish:length() == 0 then
-            notice('fish list is empty')
-            return
-        end
+        notice('fish list:')
         for item_id,value in pairs(fish) do
             notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, value.delay, value.bite_id or 'unknown'))
         end
@@ -434,7 +433,8 @@ function bait_command(arg)
             end
         end
         bait:add(item_id)
-        notice('added bait, name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        notice('added bait:')
+        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
             notice('removed all bait')
@@ -450,12 +450,10 @@ function bait_command(arg)
             end
         end
         bait:remove(item_id)
-        notice('removed bait, name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        notice('removed bait:')
+        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
-        if bait:length() == 0 then
-            notice('bait list is empty')
-            return
-        end
+        notice('bait list:')
         for item_id,_ in pairs(bait) do
             notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
         end
@@ -504,11 +502,11 @@ function fisher_command(...)
         settings.move = (arg[2]:lower() == 'on')
         notice('move bait and fish: %s':format(settings.move and 'on' or 'off'))
         settings:save('all')
-    elseif #arg == 1 and arg[1]:lower() == 'reset' then
-        notice('resetting fish database')
+    elseif #arg == 1 and arg[1]:lower() == 'resetdb' then
         settings.fish = {}
         settings:save('all')
         fish:clear()
+        notice('reset fish database')
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         local losses = stats.bites - stats.catches
         local bite_rate = 0
@@ -532,6 +530,8 @@ function fisher_command(...)
         notice('bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
         notice('catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
         notice('losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
+    elseif #arg == 2 and arg[1]:lower() == 'stats' and arg[2]:lower() == 'clear' then
+        stats = stats = {casts=0, bites=0, catches=0}
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then
@@ -556,8 +556,8 @@ function fisher_command(...)
         error('fisher equip <on/off>')
         error('fisher move <on/off>')
         error('fisher fatigue <count>')
-        error('fisher stats')
-        error('fisher reset')
+        error('fisher stats [clear]')
+        error('fisher resetdb')
     end
 end
 
