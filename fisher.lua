@@ -329,7 +329,11 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             local message_id = original:unpack('H', 11) % 0x8000
             if messages[zone_id].mcaught == message_id or messages[zone_id].caught == message_id or messages[zone_id].full == message_id then
                 current.item_id = original:unpack('I', 17)
-                current.count = 1
+                if messages[zone_id].mcaught == message_id then
+                    current.count = original:byte(21)
+                else
+                    current.count = 1
+                end
                 stats.catches = stats.catches + 1
                 update_fatigue()
             end
@@ -505,7 +509,9 @@ function fisher_command(...)
     elseif #arg == 1 and arg[1]:lower() == 'resetdb' then
         settings.fish = {}
         settings:save('all')
-        fish:clear()
+        for _,value in pairs(fish) do
+            value.bite_id = nil
+        end
         notice('reset fish database')
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         local losses = stats.bites - stats.catches
