@@ -56,6 +56,18 @@ require('messages')
 
 -- bait helper functions
 
+function check_rod()
+    local items = windower.ffxi.get_items()
+    notice('checking equipped fishing rod')
+    if items.equipment.range == 0 then
+        return true
+    elseif items.equipment.range_bag == 0 then
+        return res.items[items.inventory[items.equipment.range].id].skill ~= 48
+    else
+        return res.items[items.wardrobe[items.equipment.range].id].skill ~= 48
+    end
+end
+
 function check_bait()
     local items = windower.ffxi.get_items()
     notice('checking equipped bait')
@@ -230,6 +242,9 @@ function cast()
         if check_fatigued() then
             error('reached fishing fatigue')
             fisher_command('stop')
+        elseif check_rod() then
+            error('no fishing rod equipped')
+            fisher_command('stop')
         elseif check_inventory() then
             if check_bait() then
                 warning('casting fishing rod')
@@ -321,6 +336,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 windower.send_command('wait %d; lua i fisher catch %d':format(fish:with('bite_id', current.bite_id).delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
+                stats.bites = stats.bites + 1
             else
                 windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
             end
