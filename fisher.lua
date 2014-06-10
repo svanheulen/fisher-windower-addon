@@ -388,6 +388,10 @@ function fish_command(arg)
                 return
             end
         end
+        if res.items[item_id].type ~= 3 then
+            error('invalid fish name or item id')
+            return
+        end
         local delay = tonumber(arg[4])
         if delay == nil then
             error('invalid cast delay time')
@@ -410,9 +414,13 @@ function fish_command(arg)
                 return
             end
         end
-        fish[item_id] = nil
-        notice('removed fish:')
-        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        if res.items[item_id].type == 3 then
+            fish[item_id] = nil
+            notice('removed fish:')
+            notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        else
+            error('invalid fish name or item id')
+        end
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         notice('fish list:')
         for item_id,value in pairs(fish) do
@@ -436,9 +444,13 @@ function bait_command(arg)
                 return
             end
         end
-        bait:add(item_id)
-        notice('added bait:')
-        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
+            bait:add(item_id)
+            notice('added bait:')
+            notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        else
+            error('invalid bait name or item id')
+        end
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
             notice('removed all bait')
@@ -453,9 +465,13 @@ function bait_command(arg)
                 return
             end
         end
-        bait:remove(item_id)
-        notice('removed bait:')
-        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
+            bait:remove(item_id)
+            notice('removed bait:')
+            notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        else
+            error('invalid bait name or item id')
+        end
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         notice('bait list:')
         for item_id,_ in pairs(bait) do
