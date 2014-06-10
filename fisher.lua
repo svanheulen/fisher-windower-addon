@@ -329,6 +329,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             current.bite_id = original:unpack('I', 11)
             if current.item_id ~= nil then
                 update_fish()
+            elseif settings.fish[tostring(current.bite_id)] then
+                warning('hooked a %s':format(res.items[settings.fish[tostring(current.bite_id)]].name:lower()))
             end
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
