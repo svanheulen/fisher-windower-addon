@@ -327,7 +327,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
-            if messages[zone_id].caught == message_id or messages[zone_id].full == message_id then
+            if messages[zone_id].mcaught == message_id or messages[zone_id].caught == message_id or messages[zone_id].full == message_id then
                 current.item_id = original:unpack('I', 17)
                 current.count = 1
                 stats.catches = stats.catches + 1
@@ -391,7 +391,7 @@ function fish_command(arg)
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
         notice('added fish:')
-        notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish.bite_id or 'unknown'))
+        notice('name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish[item_id].bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
             notice('removed all fish')
@@ -531,7 +531,7 @@ function fisher_command(...)
         notice('catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
         notice('losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
     elseif #arg == 2 and arg[1]:lower() == 'stats' and arg[2]:lower() == 'clear' then
-        stats = stats = {casts=0, bites=0, catches=0}
+        stats = {casts=0, bites=0, catches=0}
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then
