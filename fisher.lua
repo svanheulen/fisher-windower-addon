@@ -406,10 +406,6 @@ function fish_command(arg)
                 return
             end
         end
-        if res.items[item_id].type ~= 3 then
-            error('invalid fish name or item id')
-            return
-        end
         local delay = tonumber(arg[4])
         if delay == nil then
             error('invalid cast delay time')
@@ -432,13 +428,9 @@ function fish_command(arg)
                 return
             end
         end
-        if res.items[item_id].type == 3 then
-            fish[item_id] = nil
-            notice('removed fish:')
-            notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
-        else
-            error('invalid fish name or item id')
-        end
+        fish[item_id] = nil
+        notice('removed fish:')
+        notice('name: %s, item id: %d':format(res.items[item_id].name, item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         notice('fish list:')
         for item_id,value in pairs(fish) do
