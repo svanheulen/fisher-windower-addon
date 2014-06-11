@@ -396,11 +396,25 @@ end
 
 -- command functions
 
+function find_item_id(name)
+    item_id = nil
+    for key,value in pairs(res.items) do
+        if value.name == name then
+            if item_id == nil then
+                item_id = key
+            elseif not value.flags:contains('No Delivery') then
+                return key
+            end
+        end
+    end
+    return item_id
+end
+
 function fish_command(arg)
     if #arg == 4 and arg[2]:lower() == 'add' then
         local item_id = tonumber(arg[3])
         if item_id == nil then
-            _,item_id = res.items:with('name', arg[3])
+            item_id = find_item_id(arg[3])
             if item_id == nil then
                 error('invalid fish name or item id')
                 return
@@ -422,7 +436,7 @@ function fish_command(arg)
         end
         local item_id = tonumber(arg[3])
         if item_id == nil then
-            _,item_id = res.items:with('name', arg[3])
+            item_id = find_item_id(arg[3])
             if item_id == nil then
                 error('invalid fish name or item id')
                 return

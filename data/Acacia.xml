@@ -1,0 +1,22 @@
+<?xml version="1.1" ?>
+<settings>
+	<global>
+        <chat>1</chat>
+        <delay>
+            <cast>4</cast>
+            <equip>2</equip>
+            <move>2</move>
+            <release>1</release>
+        </delay>
+        <equip>true</equip>
+        <fatigue>
+            <date>2014-06-11</date>
+            <remaining>183</remaining>
+        </fatigue>
+        <fish>
+            <22282249>4403</22282249>
+        </fish>
+        <log>-1</log>
+        <move>true</move>
+	</global>
+</settings>
