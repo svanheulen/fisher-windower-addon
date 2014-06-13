@@ -95,10 +95,13 @@ function check_rod()
     local items = windower.ffxi.get_items()
     message(2, 'checking equipped fishing rod')
     if items.equipment.range == 0 then
+        message(3, 'item slot: 0')
         return true
     elseif items.equipment.range_bag == 0 then
+        message(3, 'inventory slot: %d, id: %d':format(items.equipment.range, items.inventory[items.equipment.range].id))
         return res.items[items.inventory[items.equipment.range].id].skill ~= 48
     else
+        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.range, items.wardrobe[items.equipment.range].id))
         return res.items[items.wardrobe[items.equipment.range].id].skill ~= 48
     end
 end
@@ -107,10 +110,13 @@ function check_bait()
     local items = windower.ffxi.get_items()
     message(2, 'checking equipped bait')
     if items.equipment.ammo == 0 then
+        message(3, 'item slot: 0')
         return false
     elseif items.equipment.ammo_bag == 0 then
+        message(3, 'inventory slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
         return bait:contains(items.inventory[items.equipment.ammo].id)
     else
+        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.ammo, items.wardrobe[items.equipment.ammo].id))
         return bait:contains(items.wardrobe[items.equipment.ammo].id)
     end
 end
@@ -119,6 +125,7 @@ function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
         if bait:contains(item.id) and item.status == 0 then
             message(1, 'equipping bait')
+            message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3, 0)
             return true
         end
@@ -126,6 +133,7 @@ function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
         if bait:contains(item.id) and item.status == 0 then
             message(1, 'equipping bait')
+            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3, 8)
             return true
         end
@@ -138,6 +146,7 @@ end
 function check_inventory()
     local items = windower.ffxi.get_items()
     message(2, 'checking inventory space')
+    message(3, 'inventory count: %d, max: %d':format(items.count_inventory, items.max_inventory))
     return (items.max_inventory - items.count_inventory) > 1
 end
 
@@ -145,8 +154,11 @@ function move_fish()
     local items = windower.ffxi.get_items()
     message(2, 'checking bag space')
     local empty_satchel = items.max_satchel - items.count_satchel
+    message(3, 'satchel count: %d, max: %d':format(items.count_satchel, items.max_satchel))
     local empty_sack = items.max_sack - items.count_sack
+    message(3, 'sack count: %d, max: %d':format(items.count_sack, items.max_sack))
     local empty_case = items.max_case - items.count_case
+    message(3, 'case count: %d, max: %d':format(items.count_case, items.max_case))
     if (empty_satchel + empty_sack + empty_case) == 0 then
         return false
     end
@@ -169,6 +181,7 @@ function move_fish()
             end
         end
     end
+    message(3, 'fish moved: %d':format(moved))
     return moved > 0
 end
 
@@ -176,6 +189,7 @@ function move_bait()
     local items = windower.ffxi.get_items()
     message(2, 'checking inventory space')
     local empty = items.max_inventory - items.count_inventory
+    message(3, 'inventory count: %d, max: %d':format(items.count_inventory, items.max_inventory))
     local count = 20
     if empty < 2 then
         return false
@@ -205,14 +219,16 @@ function move_bait()
             moved = moved + 1
         end
     end
+    message(3, 'bait moved: %d':format(moved))
     return moved > 0
 end
 
 -- fatigue helper functions
 
 function check_fatigued()
-    update_day()
     message(2, 'checking fishing fatigue')
+    update_day()
+    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     return settings.fatigue.remaining == 0
 end
 
@@ -228,6 +244,7 @@ end
 function update_fatigue()
     message(2, 'updating fishing fatigue')
     settings.fatigue.remaining = settings.fatigue.remaining - current.count
+    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     update_fish()
 end
 
@@ -250,6 +267,7 @@ function update_fish()
         fish:with('bite_id', current.bite_id).bite_id = nil
     end
     settings.fish[tostring(current.bite_id)] = current.item_id
+    message(3, 'updated fish bite id: %d, item id: %d':format(last_bite_id, last_item_id))
     settings:save('all')
 end
 
@@ -284,14 +302,17 @@ function cast()
                 message(1, 'casting fishing rod')
                 windower.send_command('input /fish')
             elseif settings.equip and equip_bait() then
+                message(2, 'casting in %d seconds':format(settings.delay.equip))
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.equip))
             elseif settings.move and move_bait() then
+                message(2, 'casting in %d seconds':format(settings.delay.move))
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
             else
                 message(0, 'out of bait')
                 fisher_command('stop')
             end
         elseif settings.move and move_fish() then
+            message(2, 'casting in %d seconds':format(settings.delay.move))
             windower.send_command('wait %d; lua i fisher cast':format(settings.delay.move))
         else
             message(0, 'inventory is full')
@@ -308,6 +329,7 @@ function check_action(action)
         for _,target in pairs(action.targets) do
             if target.id == player_id then
                 message(0, 'action performed on you')
+                message(3, 'action category: %d, actor: %d':format(action.category, action.actor_id))
                 fisher_command('stop')
                 return
             end
@@ -318,6 +340,7 @@ end
 function check_status_change(new_status_id, old_status_id)
     if running and new_status_id ~= 0 and new_status_id ~= 50 then
         message(0, 'status was changed')
+        message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
         fisher_command('stop')
     end
 end
@@ -325,6 +348,7 @@ end
 function check_chat_message(message, sender, mode, gm)
     if running and gm then
         message(0, 'received message from gm')
+        message(3, 'chat from: %s, mode: %d':format(sender, mode))
         fisher_command('stop')
     end
 end
@@ -333,6 +357,7 @@ function check_incoming_text(original, modified, original_mode, modified_mode, b
     if running and original:find('You cannot fish here.') ~= nil then
         if error_retry then
             error_retry = false
+            message(2, 'casting in %d seconds':format(settings.delay.cast))
             windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
         else
             message(0, 'unable to fish')
@@ -347,19 +372,24 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
             if messages[zone_id].small == message_id or messages[zone_id].large == message_id or messages[zone_id].item == message_id then
+                message(3, 'incoming fish hooked: ' .. original:hex())
                 current.monster = false
             elseif messages[zone_id].monster == message_id then
+                message(3, 'incoming monster hooked: ' .. original:hex())
                 current.monster = true
             elseif messages[zone_id].time == message_id then
+                message(3, 'incoming time warning: ' .. original:hex())
                 catch(stats.casts)
             end
         elseif id == 0x2A then
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 27) % 0x8000
             if messages[zone_id].senses == message_id then
+                message(3, 'incoming fish intuition: ' .. original:hex())
                 current.item_id = original:unpack('I', 9)
             end
         elseif id == 0x115 then
+            message(3, 'incoming fish info: ' .. original:hex())
             current.bite_id = original:unpack('I', 11)
             if current.item_id ~= nil then
                 update_fish()
@@ -369,17 +399,21 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
+                message(2, 'catching fish in %d seconds':format(delay))
                 windower.send_command('wait %d; lua i fisher catch %d':format(fish:with('bite_id', current.bite_id).delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
+                message(2, 'catching fish when low on time')
             else
+                message(2, 'releasing fish in %d seconds':format(settings.delay.release))
                 windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local zone_id = windower.ffxi.get_info().zone
             local message_id = original:unpack('H', 11) % 0x8000
             if messages[zone_id].mcaught == message_id or messages[zone_id].caught == message_id or messages[zone_id].full == message_id then
+                message(3, 'incoming fish caught: ' .. original:hex())
                 current.item_id = original:unpack('I', 17)
                 if messages[zone_id].mcaught == message_id then
                     current.count = original:byte(21)
@@ -397,6 +431,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
     if running then
         if id == 0x1A then
             if original:unpack('H', 11) == 14 then
+                message(3, 'outgoing fish command: ' .. original:hex())
                 current = {}
                 stats.casts = stats.casts + 1
                 error_retry = true
@@ -404,8 +439,11 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 message(0, 'performed an action')
                 fisher_command('stop')
             end
-        elseif id == 0x110 and original:byte(15) == 4 then
-            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+        elseif id == 0x110
+            message(3, 'outgoing fishing action: ' .. original:hex())
+            if original:byte(15) == 4 then
+                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+            end
         end
     end
 end
