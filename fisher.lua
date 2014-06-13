@@ -439,7 +439,7 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
                 message(0, 'performed an action')
                 fisher_command('stop')
             end
-        elseif id == 0x110
+        elseif id == 0x110 then
             message(3, 'outgoing fishing action: ' .. original:hex())
             if original:byte(15) == 4 then
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
@@ -499,7 +499,7 @@ function fish_command(arg)
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
         windower.add_to_chat(200, 'added fish:')
-        windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, delay, fish[item_id].bite_id or 'unknown'))
+        windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
             windower.add_to_chat(200, 'removed all fish')
@@ -516,11 +516,11 @@ function fish_command(arg)
         end
         fish[item_id] = nil
         windower.add_to_chat(200, 'removed fish:')
-        windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name, item_id))
+        windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         windower.add_to_chat(200, 'fish list:')
         for item_id,value in pairs(fish) do
-            windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name, item_id, value.delay, value.bite_id or 'unknown'))
+            windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, value.delay, value.bite_id or 'unknown'))
         end
     else
         windower.add_to_chat(167, 'usage:')
@@ -544,7 +544,7 @@ function bait_command(arg)
         if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
             bait:add(item_id)
             windower.add_to_chat(200, 'added bait:')
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name, item_id))
+            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         else
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
@@ -565,14 +565,14 @@ function bait_command(arg)
         if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
             bait:remove(item_id)
             windower.add_to_chat(200, 'removed bait:')
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name, item_id))
+            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         else
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         windower.add_to_chat(200, 'bait list:')
         for item_id,_ in pairs(bait) do
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name, item_id))
+            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         end
     else
         windower.add_to_chat(167, 'usage:')
