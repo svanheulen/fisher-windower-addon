@@ -14,13 +14,12 @@ POL/FFXI TERMS OF SERVICE AND MAY GET YOU BANNED. USE AT YOUR OWN RISK.
 
 This addon doesn't actually fight the fish, it waits the provided catch
 delay time and then injects a packet that tells the server the fish has
-zero HP and you're pulling it up. When you start fishing, you need to
+zero HP and you're pulling it up. When adding fish or bait, you need to
 use the exact spelling and capitalization (quoted when spaces are
-needed) the game uses for the bait and fish OR use item IDs. If the bite
-ID for the fish is unknown it will catch every unknown fish or item (but
-not monsters) using a very long catch delay until it finds the correct
-bite ID. You can also cancel a fish on the line normally at any time.
-
+needed) the game uses OR use item IDs. If the bite ID for the fish is
+unknown it will catch every unknown fish or item (but not monsters),
+when you get the time warning, until it finds the correct bite ID. You
+can also cancel a fish on the line normally at any time.
 
 IMPORTANT NOTE:
 Setting a reasonable catch delay is very important. This is the time it
@@ -40,6 +39,7 @@ Fisher will automatically stop running under the following conditions:
     You perform an action.
     You change zones.
     You get a "You cannot fish here." error multiple times in a row.
+    You don't have a fishing rod equipped.
 
 To install this addon, create a folder called "fisher" inside the
 Windower addons folder and copy the fisher.lua and messages.lua files
@@ -73,6 +73,10 @@ The available commands are:
         Starts fishing.
     fisher stop
         Stops fishing.
+    fisher chat <level>
+        Sets the level of detail for output to the chat. (default: 1)
+    fisher log <level>
+        Sets the level of detail for output to the log file. (default: off)
     fisher equip <on/off>
         Turns on/off auto-equipping of bait. (default: off)
     fisher move <on/off>
