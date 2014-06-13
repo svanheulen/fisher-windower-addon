@@ -42,8 +42,10 @@ Fisher will automatically stop running under the following conditions:
     You get a "You cannot fish here." error multiple times in a row.
 
 To install this addon, create a folder called "fisher" inside the
-Windower addons folder and copy the fisher.lua file there. Your addon
-folder is most likely "C:\Program Files (x86)\Windower4\addons".
+Windower addons folder and copy the fisher.lua and messages.lua files
+there. Your addon folder is most likely "C:\Program Files
+(x86)\Windower4\addons". 
+
 
 To load the addon, in the Final Fantasy XI input line, type:
     //lua load fisher
