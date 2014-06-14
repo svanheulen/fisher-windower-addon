@@ -267,7 +267,7 @@ function update_fish()
         fish:with('bite_id', current.bite_id).bite_id = nil
     end
     settings.fish[tostring(current.bite_id)] = current.item_id
-    message(3, 'updated fish bite id: %d, item id: %d':format(last_bite_id, last_item_id))
+    message(3, 'updated fish bite id: %d, item id: %d':format(current.bite_id, current.item_id))
     settings:save('all')
 end
 
@@ -399,8 +399,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
+                local delay = fish:with('bite_id', current.bite_id).delay
                 message(2, 'catching fish in %d seconds':format(delay))
-                windower.send_command('wait %d; lua i fisher catch %d':format(fish:with('bite_id', current.bite_id).delay, stats.casts))
+                windower.send_command('wait %d; lua i fisher catch %d':format(delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
