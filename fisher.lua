@@ -18,14 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '3.0.0'
+_addon.version = '3.1.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
 -- modules
 
-require('luau')
+config = require('config')
+res = require('resources')
 require('pack')
+require('sets')
+require('strings')
+require('tables')
 
 -- default settings
 
@@ -34,6 +38,7 @@ defaults.chat = 1
 defaults.log = -1
 defaults.equip = false
 defaults.move = false
+defaults.senses = true
 defaults.delay = {}
 defaults.delay.release = 1
 defaults.delay.cast = 4
@@ -393,8 +398,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             current.bite_id = original:unpack('I', 11)
             if current.item_id ~= nil then
                 update_fish()
-            elseif settings.fish[tostring(current.bite_id)] then
-                message(1, 'hooked a %s':format(res.items[settings.fish[tostring(current.bite_id)]].name:lower()))
+            elseif settings.senses and settings.fish[tostring(current.bite_id)] then
+                windower.add_to_chat(204, 'hooked a %s':format(res.items[settings.fish[tostring(current.bite_id)]].name:lower()))
             end
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
@@ -499,11 +504,11 @@ function fish_command(arg)
             return
         end
         fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
-        windower.add_to_chat(200, 'added fish:')
-        windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id or 'unknown'))
+        windower.add_to_chat(204, 'added fish:')
+        windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
-            windower.add_to_chat(200, 'removed all fish')
+            windower.add_to_chat(204, 'removed all fish')
             fish:clear()
             return
         end
@@ -516,12 +521,12 @@ function fish_command(arg)
             end
         end
         fish[item_id] = nil
-        windower.add_to_chat(200, 'removed fish:')
-        windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
+        windower.add_to_chat(204, 'removed fish:')
+        windower.add_to_chat(204, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
     elseif #arg == 2 and arg[2]:lower() == 'list' then
-        windower.add_to_chat(200, 'fish list:')
+        windower.add_to_chat(204, 'fish list:')
         for item_id,value in pairs(fish) do
-            windower.add_to_chat(200, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, value.delay, value.bite_id or 'unknown'))
+            windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, value.delay, value.bite_id or 'unknown'))
         end
     else
         windower.add_to_chat(167, 'usage:')
@@ -544,14 +549,14 @@ function bait_command(arg)
         end
         if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
             bait:add(item_id)
-            windower.add_to_chat(200, 'added bait:')
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
+            windower.add_to_chat(204, 'added bait:')
+            windower.add_to_chat(204, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         else
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         if arg[3]:lower() == '*' then
-            windower.add_to_chat(200, 'removed all bait')
+            windower.add_to_chat(204, 'removed all bait')
             bait:clear()
             return
         end
@@ -565,15 +570,15 @@ function bait_command(arg)
         end
         if res.items[item_id].type == 4 and res.items[item_id].skill == 48 and res.items[item_id].slots[3] then
             bait:remove(item_id)
-            windower.add_to_chat(200, 'removed bait:')
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
+            windower.add_to_chat(204, 'removed bait:')
+            windower.add_to_chat(204, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         else
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
     elseif #arg == 2 and arg[2]:lower() == 'list' then
-        windower.add_to_chat(200, 'bait list:')
+        windower.add_to_chat(204, 'bait list:')
         for item_id,_ in pairs(bait) do
-            windower.add_to_chat(200, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
+            windower.add_to_chat(204, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
         end
     else
         windower.add_to_chat(167, 'usage:')
@@ -619,11 +624,11 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'chat' then
         settings.chat = tonumber(arg[2]) or 1
-        windower.add_to_chat(200, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
+        windower.add_to_chat(204, 'chat message level: %s':format(settings.chat >= 0 and settings.chat or 'off'))
         settings:save()
     elseif #arg == 2 and arg[1]:lower() == 'log' then
         settings.log = tonumber(arg[2]) or -1
-        windower.add_to_chat(200, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
+        windower.add_to_chat(204, 'log message level: %s':format(settings.log >= 0 and settings.log or 'off'))
         settings:save()
         if settings.log < 0 and log_file ~= nil then
             log_file:close()
@@ -631,11 +636,15 @@ function fisher_command(...)
         end
     elseif #arg == 2 and arg[1]:lower() == 'equip' then
         settings.equip = (arg[2]:lower() == 'on')
-        windower.add_to_chat(200, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
+        windower.add_to_chat(204, 'equip bait: %s':format(settings.equip and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 2 and arg[1]:lower() == 'move' then
         settings.move = (arg[2]:lower() == 'on')
-        windower.add_to_chat(200, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
+        windower.add_to_chat(204, 'move bait and fish: %s':format(settings.move and 'on' or 'off'))
+        settings:save('all')
+    elseif #arg == 2 and arg[1]:lower() == 'senses' then
+        settings.senses = (arg[2]:lower() == 'on')
+        windower.add_to_chat(204, 'display hooked fish: %s':format(settings.senses and 'on' or 'off'))
         settings:save('all')
     elseif #arg == 1 and arg[1]:lower() == 'resetdb' then
         settings.fish = {}
@@ -643,7 +652,7 @@ function fisher_command(...)
         for _,value in pairs(fish) do
             value.bite_id = nil
         end
-        windower.add_to_chat(200, 'reset fish database')
+        windower.add_to_chat(204, 'reset fish database')
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
         local losses = stats.bites - stats.catches
         local bite_rate = 0
@@ -663,10 +672,10 @@ function fisher_command(...)
         if running == false then
             update_day()
         end
-        windower.add_to_chat(200, 'casts: %d, remaining fatigue: %d':format(stats.casts, settings.fatigue.remaining))
-        windower.add_to_chat(200, 'bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
-        windower.add_to_chat(200, 'catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
-        windower.add_to_chat(200, 'losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
+        windower.add_to_chat(204, 'casts: %d, remaining fatigue: %d':format(stats.casts, settings.fatigue.remaining))
+        windower.add_to_chat(204, 'bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
+        windower.add_to_chat(204, 'catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
+        windower.add_to_chat(204, 'losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
     elseif #arg == 2 and arg[1]:lower() == 'stats' and arg[2]:lower() == 'clear' then
         stats = {casts=0, bites=0, catches=0}
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
@@ -678,11 +687,11 @@ function fisher_command(...)
                 update_day()
             end
             settings.fatigue.remaining = settings.fatigue.remaining + count
-            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            windower.add_to_chat(204, 'remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save('all')
         else
             settings.fatigue.remaining = count
-            windower.add_to_chat(200, 'remaining fatigue: %d':format(settings.fatigue.remaining))
+            windower.add_to_chat(204, 'remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save('all')
         end
     else
@@ -695,6 +704,7 @@ function fisher_command(...)
         windower.add_to_chat(167, '  fisher log <level>')
         windower.add_to_chat(167, '  fisher equip <on/off>')
         windower.add_to_chat(167, '  fisher move <on/off>')
+        windower.add_to_chat(167, '  fisher senses <on/off>')
         windower.add_to_chat(167, '  fisher fatigue <count>')
         windower.add_to_chat(167, '  fisher stats [clear]')
         windower.add_to_chat(167, '  fisher resetdb')
