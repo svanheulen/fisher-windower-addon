@@ -678,6 +678,7 @@ function fisher_command(...)
         windower.add_to_chat(204, 'losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
     elseif #arg == 2 and arg[1]:lower() == 'stats' and arg[2]:lower() == 'clear' then
         stats = {casts=0, bites=0, catches=0}
+        windower.add_to_chat(204, 'reset fishing statistics')
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
         if count == nil then

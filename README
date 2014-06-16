@@ -81,6 +81,8 @@ The available commands are:
         Turns on/off auto-equipping of bait. (default: off)
     fisher move <on/off>
         Turns on/off auto-moving of bait/fish between bags. (default: off)
+    fisher senses <on/off>
+        Turns on/off displaying the name of hooked fish. (default: on)
     fisher fatigue <count>
         Sets remaining catches until fatigued.
     fisher stats [clear]
