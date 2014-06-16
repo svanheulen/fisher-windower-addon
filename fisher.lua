@@ -62,7 +62,7 @@ log_file = nil
 
 require('messages')
 
--- debug and logging functions
+-- logging functions
 
 function message(level, message)
     local prefix = 'E'
@@ -94,7 +94,7 @@ function message(level, message)
     end
 end
 
--- bait helper functions
+-- equipment helper functions
 
 function check_rod()
     local items = windower.ffxi.get_items()
@@ -230,13 +230,6 @@ end
 
 -- fatigue helper functions
 
-function check_fatigued()
-    message(2, 'checking fishing fatigue')
-    update_day()
-    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
-    return settings.fatigue.remaining == 0
-end
-
 function update_day()
     local today = os.date('!%Y-%m-%d', os.time() + 32400)
     if settings.fatigue.date ~= today then
@@ -244,6 +237,13 @@ function update_day()
         settings.fatigue.remaining = 200
         settings:save('all')
     end
+end
+
+function check_fatigued()
+    message(2, 'checking fishing fatigue')
+    update_day()
+    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
+    return settings.fatigue.remaining == 0
 end
 
 function update_fatigue()
@@ -254,6 +254,20 @@ function update_fatigue()
 end
 
 -- fish id helper functions
+
+function find_item_id(name)
+    item_id = nil
+    for key,value in pairs(res.items) do
+        if value.name == name then
+            if item_id == nil then
+                item_id = key
+            elseif not value.flags:contains('No Delivery') then
+                return key
+            end
+        end
+    end
+    return item_id
+end
 
 function get_bite_id(id)
     for bite_id,item_id in pairs(settings.fish) do
@@ -473,20 +487,6 @@ function check_unload()
 end
 
 -- command functions
-
-function find_item_id(name)
-    item_id = nil
-    for key,value in pairs(res.items) do
-        if value.name == name then
-            if item_id == nil then
-                item_id = key
-            elseif not value.flags:contains('No Delivery') then
-                return key
-            end
-        end
-    end
-    return item_id
-end
 
 function fish_command(arg)
     if #arg == 4 and arg[2]:lower() == 'add' then
