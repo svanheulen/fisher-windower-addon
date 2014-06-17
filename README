@@ -89,3 +89,18 @@ The available commands are:
         Displays stats about your fishing.
     fisher resetdb
         Clears all known bite IDs from settings file.
+
+Examples:
+    //fisher fish add "Moat Carp" 5
+        Add moat carp to the list of fish to catch and catch after it
+        has been on the line for 5 seconds.
+    
+    //fisher fish add 4401 5
+        Same as above except using the item ID of moat carp instead
+        of the name.
+
+    //fisher bait add "Insect Ball"
+        Add ball of insect paste to the list of bait to use.
+
+    //fisher log 3
+        Enable level 3 message logging to the log file.
