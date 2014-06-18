@@ -67,10 +67,14 @@ def search_dialog(zones, search):
 def write_lua(messages):
     o = open('messages.lua', 'w')
     print('messages = {}', file=o)
-    for zone_id, message_ids in messages.items():
+    zone_ids = list(messages.keys())
+    zone_ids.sort()
+    for zone_id in zone_ids:
         line = []
-        for name, message_id in message_ids.items():
-            line.append('{}={}'.format(name, message_id))
+        names = list(messages[zone_id].keys())
+        names.sort()
+        for name in names:
+            line.append('{}={}'.format(name, messages[zone_id][name]))
         line = ', '.join(line)
         print("messages[{}] = {{{}}}".format(zone_id, line), file=o)
     o.close()
