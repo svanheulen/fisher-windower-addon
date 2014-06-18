@@ -46,7 +46,6 @@ Windower addons folder and copy the fisher.lua and messages.lua files
 there. Your addon folder is most likely "C:\Program Files
 (x86)\Windower4\addons". 
 
-
 To load the addon, in the Final Fantasy XI input line, type:
     //lua load fisher
 
