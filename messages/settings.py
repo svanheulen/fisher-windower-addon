@@ -1,284 +1,184 @@
 search = {
-    "small": b'Something caught the hook!\x7f1\x00\x07',
-    "large": b'Something caught the hook!!!\x7f1\x00\x07',
-    "item": b'You feel something pulling at your line.\x7f1\x00\x07',
-    "monster": b'Something clamps onto your line ferociously!\x7f1\x00\x07',
-    "senses": b"Your keen angler's senses tell you that this is the pull of \x01\x01\x01 \x01\x05$\x82\x80\x80\x80!\x7f1\x00\x07",
-    "time": b"You don't know how much longer you can keep this one on the line...\x7f1\x00\x07",
-    "mcaught": b'\x1c\x00 caught \x01\x05\x03\x82\x81\x80\x80 \x01\t)\x82\x81\x80\x80\x82\x80\x80\x80!\x7f1\x00\x07',
-    "caught": b'\x1c\x00 caught \x01\x01\x01 \x01\x05$\x82\x80\x80\x80!\x7f1\x00\x07',
-    "full": b'\x1c\x00 caught \x01\x01\x01 \x01\x05$\x82\x80\x80\x80, but cannot carry any more items.\x07\x1c\x00 regretfully releases the \x01\x05#\x82\x80\x80\x80.\x7f1\x00\x07'
+    'small': b'Something caught the hook!\x7f1\x00\x07',
+    'large': b'Something caught the hook!!!\x7f1\x00\x07',
+    'item': b'You feel something pulling at your line.\x7f1\x00\x07',
+    'monster': b'Something clamps onto your line ferociously!\x7f1\x00\x07',
+    'senses': b"Your keen angler's senses tell you that this is the pull of \x01\x01\x01 \x01\x05$\x82\x80\x80\x80!\x7f1\x00\x07",
+    'time': b"You don't know how much longer you can keep this one on the line...\x7f1\x00\x07",
+    'mcaught': b'\x1c\x00 caught \x01\x05\x03\x82\x81\x80\x80 \x01\t)\x82\x81\x80\x80\x82\x80\x80\x80!\x7f1\x00\x07',
+    'caught': b'\x1c\x00 caught \x01\x01\x01 \x01\x05$\x82\x80\x80\x80!\x7f1\x00\x07',
+    'full': b'\x1c\x00 caught \x01\x01\x01 \x01\x05$\x82\x80\x80\x80, but cannot carry any more items.\x07\x1c\x00 regretfully releases the \x01\x05#\x82\x80\x80\x80.\x7f1\x00\x07'
 }
 
 zones = {
-    1: 6421,
-    10: 6430,
-    100: 6520,
-    101: 6521,
-    102: 6522,
-    103: 6523,
-    104: 6524,
-    105: 6525,
-    106: 6526,
-    107: 6527,
-    108: 6528,
-    109: 6529,
-    11: 6431,
-    110: 6530,
-    111: 6531,
-    112: 6532,
-    113: 6533,
-    114: 6534,
-    115: 6535,
-    116: 6536,
-    117: 6537,
-    118: 6538,
-    119: 6539,
-    12: 6432,
-    120: 6540,
-    121: 6541,
-    122: 6542,
-    123: 6543,
-    124: 6544,
-    125: 6545,
-    126: 6546,
-    127: 6547,
-    128: 6548,
-    129: 6549,
-    13: 6433,
-    130: 6550,
-    131: 6551,
-    132: 6552,
-    134: 6554,
-    135: 6555,
-    136: 6556,
-    137: 6557,
-    138: 6558,
-    139: 6559,
-    14: 6434,
-    140: 6560,
-    141: 6561,
-    142: 6562,
-    143: 6563,
-    144: 6564,
-    145: 6565,
-    146: 6566,
-    147: 6567,
-    148: 6568,
-    149: 6569,
-    15: 6435,
-    150: 6570,
-    151: 6571,
-    152: 6572,
-    153: 6573,
-    154: 6574,
-    155: 6575,
-    156: 6576,
-    157: 6577,
-    158: 6578,
-    159: 6579,
-    16: 6436,
-    160: 6580,
-    161: 6581,
-    162: 6582,
-    163: 6583,
-    164: 6584,
-    165: 6585,
-    166: 6586,
-    167: 6587,
-    168: 6588,
-    169: 6589,
-    17: 6437,
-    170: 6590,
-    171: 6591,
-    172: 6592,
-    173: 6593,
-    174: 6594,
-    175: 6595,
-    176: 6596,
-    177: 6597,
-    178: 6598,
-    179: 6599,
-    18: 6438,
-    180: 6600,
-    181: 6601,
-    182: 6602,
-    183: 6603,
-    184: 6604,
-    185: 6605,
-    186: 6606,
-    187: 6607,
-    188: 6608,
-    19: 6439,
-    190: 6610,
-    191: 6611,
-    192: 6612,
-    193: 6613,
-    194: 6614,
-    195: 6615,
-    196: 6616,
-    197: 6617,
-    198: 6618,
-    2: 6422,
-    20: 6440,
-    200: 6620,
-    201: 6621,
-    202: 6622,
-    203: 6623,
-    204: 6624,
-    205: 6625,
-    206: 6626,
-    207: 6627,
-    208: 6628,
-    209: 6629,
-    21: 6441,
-    211: 6631,
-    212: 6632,
-    213: 6633,
-    215: 6635,
-    216: 6636,
-    217: 6637,
-    218: 6638,
-    22: 6442,
-    220: 6640,
-    221: 6641,
-    222: 6642,
-    223: 6643,
-    224: 6644,
-    225: 6645,
-    226: 6646,
-    227: 6647,
-    228: 6648,
-    23: 6443,
-    230: 6650,
-    231: 6651,
-    232: 6652,
-    233: 6653,
-    234: 6654,
-    235: 6655,
-    236: 6656,
-    237: 6657,
-    238: 6658,
-    239: 6659,
-    24: 6444,
-    240: 6660,
-    241: 6661,
-    242: 6662,
-    243: 6663,
-    244: 6664,
-    245: 6665,
-    246: 6666,
-    247: 6667,
-    248: 6668,
-    249: 6669,
-    25: 6445,
-    250: 6670,
-    251: 6671,
-    252: 6672,
-    253: 6473,
-    254: 6674,
-    255: 6675,
-    256: 85591,
-    257: 85592,
-    258: 85593,
-    259: 85594,
-    26: 6446,
-    260: 85595,
-    261: 85596,
-    262: 85597,
-    263: 85598,
-    264: 85599,
-    265: 85600,
-    266: 85601,
-    267: 85602,
-    268: 85603,
-    269: 85604,
-    27: 6447,
-    270: 85605,
-    271: 85606,
-    272: 85607,
-    273: 85608,
-    274: 85609,
-    275: 85610,
-    28: 6448,
-    280: 85615,
-    284: 85619,
-    285: 85619,
-    29: 6449,
-    3: 6423,
-    30: 6450,
-    31: 6451,
-    32: 6452,
-    33: 6453,
-    34: 6454,
-    35: 6455,
-    36: 6456,
-    37: 6457,
-    38: 6458,
-    39: 6459,
-    4: 6424,
-    40: 6460,
-    41: 6461,
-    42: 6462,
-    43: 6463,
-    44: 6464,
-    45: 6465,
-    46: 6466,
-    47: 6467,
-    48: 6468,
-    5: 6425,
-    50: 6470,
-    51: 6471,
-    52: 6472,
-    53: 6473,
-    54: 6474,
-    55: 6475,
-    56: 6476,
-    57: 6477,
-    58: 6478,
-    59: 6479,
-    6: 6426,
-    60: 6480,
-    61: 6481,
-    62: 6482,
-    63: 6483,
-    64: 6484,
-    65: 6485,
-    66: 6486,
-    67: 6487,
-    68: 6488,
-    69: 6489,
-    7: 6427,
-    70: 6490,
-    71: 6491,
-    72: 6492,
-    73: 6493,
-    74: 6494,
-    75: 6495,
-    76: 6496,
-    77: 6497,
-    78: 6498,
-    79: 6499,
-    8: 6428,
-    80: 6500,
-    81: 6501,
-    82: 6502,
-    83: 6503,
-    84: 6504,
-    85: 6505,
-    86: 6506,
-    87: 6507,
-    88: 6508,
-    89: 6509,
-    9: 6429,
-    90: 6510,
-    91: 6511,
-    92: 6512,
-    93: 6513,
-    94: 6514,
-    95: 6515,
-    96: 6516,
-    97: 6517,
-    98: 6518,
-    99: 6519
+    1: 6421, # phanauet channel
+    2: 6422, # carpenters' landing
+    3: 6423, # manaclipper
+    4: 6424, # bibiki bay
+    11: 6431, # oldton movalpolos
+    #15: 6435, # abyssea - konschtat
+    24: 6444, # lufaise meadows
+    25: 6445, # misareaux coast
+    26: 6446, # tavnazian safehold
+    27: 6447, # phomiuna aquaducts
+    #33: 6453, # al'taieu
+    39: 6459, # dynamis - valkurm
+    40: 6460, # dynamis - buburimu
+    41: 6461, # dynamis - qufim
+    42: 6462, # dynamis - tavnazia
+    #43: 6463, # diorama abdhaljs-ghelsba
+    #44: 6464, # abdhaljs isle-purgonorgo
+    #45: 6465, # abyssea - tahrongi
+    46: 6466, # open sea route to al zahbi
+    47: 6467, # open sea route to mhaura
+    48: 6468, # al zahbi
+    50: 6470, # aht urhgan whitegate
+    51: 6471, # wajaom woodlands
+    52: 6472, # bhaflau thickets
+    53: 6473, # nashmau
+    54: 6474, # arrapago reef
+    55: 6475, # ilrusi atoll
+    #56: 6476, # periqia
+    57: 6477, # talacca cove
+    58: 6478, # silver sea route to nashmau
+    59: 6479, # silver sea route to al zahbi
+    #60: 6480, # the ashu talif
+    61: 6481, # mount zhayolm
+    65: 6485, # mamook
+    #66: 6486, # mamool ja training grounds
+    #67: 6487, # jade sepulcher
+    68: 6488, # aydeewa subterrane
+    #69: 6489, # leujaoam sanctum
+    79: 6499, # caedarva mire
+    81: 6501, # east ronfaure [s]
+    82: 6502, # jugner forest [s]
+    83: 6503, # vunkerl inlet [s]
+    84: 6504, # batallia downs [s]
+    85: 6505, # la vaule [s]
+    #86: 6506, # everbloom hollow
+    87: 6507, # bastok markets [s]
+    88: 6508, # north gustaberg [s]
+    89: 6509, # grauberg [s]
+    90: 6510, # pashhow marshlands [s]
+    91: 6511, # rolanberry fields [s]
+    #93: 6513, # ruhotz silvermines
+    94: 6514, # windurst waters [s]
+    95: 6515, # west sarutabaruta [a]
+    96: 6516, # fort karugo-narugo [s]
+    99: 6519, # castle oztroja [s]
+    100: 6520, # west ronfaure
+    101: 6521, # east ronfaure
+    102: 6522, # la theine plateau
+    103: 6523, # valkurm dunes
+    104: 6524, # jugner forest
+    105: 6525, # batallia downs
+    106: 6526, # north gustaberg
+    107: 6527, # south gustaberg
+    #108: 6528, # konschtat highlands
+    109: 6529, # pashhow marshlands
+    110: 6530, # rolanberry fields
+    111: 6531, # beaucedine glacier
+    113: 6533, # cape teriggan
+    114: 6534, # eastern altepa desert
+    115: 6535, # west sarutabaruta
+    116: 6536, # east sarutabaruta
+    #117: 6537, # tahrongi canyon
+    118: 6538, # buburimu peninsula
+    #119: 6539, # meriphataud mountains
+    120: 6540, # sauromugue champaign
+    121: 6541, # the sanctuary of zi'tah
+    122: 6542, # ro'maeve
+    123: 6543, # yuhtunga jungle
+    124: 6544, # yhoator jungle
+    125: 6545, # western altepa desert
+    126: 6546, # qufim island
+    130: 6550, # ru'aun gardens
+    132: 6552, # abyssea - la theine
+    134: 6554, # dynamis - beaucedine
+    136: 6556, # beaucedine glacier [s]
+    #139: 6559, # horlais peak
+    140: 6560, # ghelsba outpost
+    #141: 6561, # fort ghelsba
+    142: 6562, # yughott grotto
+    143: 6563, # palborough mines
+    145: 6565, # giddeus
+    148: 6568, # qulun dome
+    149: 6569, # davoi
+    151: 6571, # castle oztroja
+    153: 6573, # the boyahda tree
+    154: 6574, # dragon's aery
+    157: 6577, # middle delkfutt's tower
+    158: 6578, # upper delkfutt's tower
+    159: 6579, # temple of uggalepih
+    160: 6580, # den of rancor
+    166: 6586, # ranguemont pass
+    167: 6587, # bostaunieux oubliette
+    169: 6589, # torimarai canal
+    172: 6592, # zeruhn mines
+    173: 6593, # korroloka tunnel
+    174: 6594, # kuftal tunnel
+    176: 6596, # sea serpent grotto
+    178: 6598, # the shrine of ru'avitau
+    184: 6604, # lower delkfutt's tower
+    186: 6606, # dynamis - bastok
+    187: 6607, # dynamis - windurst
+    191: 6611, # dangruf wadi
+    193: 6613, # ordelle's caves
+    196: 6616, # gusgan mines
+    #200: 6620, # garlaige citadel
+    204: 6624, # fei'yin
+    208: 6628, # quicksand caves
+    212: 6632, # gustav tunnel
+    213: 6633, # labyrinth of onzozo
+    216: 6636, # abyssea - misareaux
+    217: 6637, # abyssea - vunkerl
+    218: 6638, # abyssea - altepa
+    220: 6640, # ship bound for selbina
+    221: 6641, # ship bound for mhaura
+    #222: 6642, # provenance
+    227: 6647, # ship bound for selbina
+    228: 6648, # ship bound for mhaura
+    231: 6651, # northern san d'oria
+    232: 6652, # port san d'oria
+    234: 6654, # bastok mines
+    235: 6655, # bastok markets
+    236: 6656, # port bastok
+    237: 6657, # metalworks
+    238: 6658, # windurst waters
+    239: 6659, # windurst walls
+    240: 6660, # port windurst
+    241: 6661, # windurst woods
+    242: 6662, # heavens tower
+    245: 6665, # lower jeuno
+    246: 6666, # port jeuno
+    247: 6667, # rabao
+    248: 6668, # selbina
+    249: 6669, # mhaura
+    250: 6670, # kazham
+    251: 6671, # hall of the gods
+    252: 6672, # norg
+    #253: 6473, # abyssea - uleguerand
+    254: 6674, # abyssea - grauberg
+    256: 85591, # western adoulin
+    257: 85592, # eastern adoulin
+    258: 85593, # rala waterways
+    #259: 85594, # rala waterways [u]
+    260: 85595, # yahse hunting grounds
+    261: 85596, # ceizak battlegrounds
+    262: 85597, # foret de hennetiel
+    263: 85598, # yorcia weald
+    #264: 85599, # yorcia weald [u]
+    265: 85600, # morimar basalt fields
+    266: 85601, # marjami ravine
+    267: 85602, # kamihr drifts
+    268: 85603, # sih gates
+    269: 85604, # moh gates
+    270: 85605, # cirdas caverns
+    #271: 85606, # cirdas caverns [u]
+    272: 85607, # dho gates
+    273: 85608, # woh gates
+    #274: 85609, # outer ra'kaznar
+    #275: 85610, # outer ra'kaznar [u]
+    280: 85615, # mog garden
+    #281: 85616, # leafallia
 }
