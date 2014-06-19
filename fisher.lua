@@ -357,10 +357,18 @@ function check_action(action)
 end
 
 function check_status_change(new_status_id, old_status_id)
-    if running and new_status_id ~= 0 and new_status_id ~= 50 then
-        message(0, 'status was changed')
-        message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
-        fisher_command('stop')
+    if running then
+        if new_status_id == 50 and old_status_id == 0 then
+            current = {}
+            stats.casts = stats.casts + 1
+            error_retry = true
+        elseif new_status_id == 0 and old_status_id == 50 then
+            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+        else
+            message(0, 'status was changed')
+            message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
+            fisher_command('stop')
+        end
     end
 end
 
@@ -374,6 +382,7 @@ end
 
 function check_incoming_text(original, modified, original_mode, modified_mode, blocked)
     if running and (original:find('You cannot fish here.') ~= nil or original:find('You cannot use that command at this time.') ~= nil) then
+        message(3, 'recieved error text: %s':format(original))
         if error_retry then
             error_retry = false
             message(2, 'casting in %d seconds':format(settings.delay.cast))
@@ -452,18 +461,12 @@ function check_outgoing_chunk(id, original, modified, injected, blocked)
         if id == 0x1A then
             if original:unpack('H', 11) == 14 then
                 message(3, 'outgoing fish command: ' .. original:hex())
-                current = {}
-                stats.casts = stats.casts + 1
-                error_retry = true
             else
                 message(0, 'performed an action')
                 fisher_command('stop')
             end
         elseif id == 0x110 then
             message(3, 'outgoing fishing action: ' .. original:hex())
-            if original:byte(15) == 4 then
-                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
-            end
         end
     end
 end
