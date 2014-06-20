@@ -447,10 +447,12 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
         elseif id == 0x37 then
             local new_status = original:byte(0x31)
             if new_status == 56 and old_status ~= 56 then
+                message(3, 'status changed to fishing')
                 current = {}
                 stats.casts = stats.casts + 1
                 error_retry = true
             elseif new_status == 0 and old_status ~= 0 then
+                message(3, 'status changed to idle')
                 message(2, 'casting in %d seconds':format(settings.delay.cast))
                 windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
             end
@@ -611,7 +613,7 @@ function fisher_command(...)
         end
         old_status = windower.ffxi.get_player().status
         if old_status ~= 0 then
-            windower.add_to_chat(167, 'not idle')
+            windower.add_to_chat(167, 'status is not idle')
             return
         end
         if fish:empty() or bait:empty() then
