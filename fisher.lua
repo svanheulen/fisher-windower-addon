@@ -358,17 +358,9 @@ end
 
 function check_status_change(new_status_id, old_status_id)
     if running then
-        if new_status_id == 50 and old_status_id == 0 then
-            current = {}
-            stats.casts = stats.casts + 1
-            error_retry = true
-        elseif new_status_id == 0 and old_status_id == 50 then
-            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
-        else
-            message(0, 'status was changed')
-            message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
-            fisher_command('stop')
-        end
+        message(0, 'status was changed')
+        message(3, 'status new: %d, old: %d':format(new_status_id, old_status_id))
+        fisher_command('stop')
     end
 end
 
@@ -382,7 +374,7 @@ end
 
 function check_incoming_text(original, modified, original_mode, modified_mode, blocked)
     if running and (original:find('You cannot fish here.') ~= nil or original:find('You cannot use that command at this time.') ~= nil) then
-        message(3, 'recieved error text: %s':format(original))
+        message(3, 'recieved error text')
         if error_retry then
             error_retry = false
             message(2, 'casting in %d seconds':format(settings.delay.cast))
@@ -452,6 +444,17 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 stats.catches = stats.catches + 1
                 update_fatigue()
             end
+        elseif id == 0x37 then
+            local new_status = original:byte(0x31)
+            if new_status == 56 and old_status ~= 56 then
+                current = {}
+                stats.casts = stats.casts + 1
+                error_retry = true
+            elseif new_status == 0 and old_status ~= 0 then
+                message(2, 'casting in %d seconds':format(settings.delay.cast))
+                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+            end
+            old_status = new_status
         end
     end
 end
@@ -604,6 +607,11 @@ function fisher_command(...)
     elseif #arg == 1 and arg[1]:lower() == 'start' then
         if running then
             windower.add_to_chat(167, 'already fishing')
+            return
+        end
+        old_status = windower.ffxi.get_player().status
+        if old_status ~= 0 then
+            windower.add_to_chat(167, 'not idle')
             return
         end
         if fish:empty() or bait:empty() then
