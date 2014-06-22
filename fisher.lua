@@ -445,7 +445,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 update_fatigue()
             end
         elseif id == 0x37 then
-            local new_status = original:byte(0x31)
+            local new_status = original:byte(49)
             if new_status == 56 and old_status ~= 56 then
                 message(3, 'status changed to fishing')
                 current = {}

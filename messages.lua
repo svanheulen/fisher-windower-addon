@@ -33,6 +33,7 @@ messages[82] = {caught=7371, full=7342, item=7383, large=7382, mcaught=7346, mon
 messages[83] = {caught=7059, full=7030, item=7071, large=7070, mcaught=7034, monster=7072, senses=7073, small=7028, time=7060}
 messages[84] = {caught=7078, full=7049, item=7090, large=7089, mcaught=7053, monster=7091, senses=7092, small=7047, time=7079}
 messages[85] = {caught=7059, full=7030, item=7071, large=7070, mcaught=7034, monster=7072, senses=7073, small=7028, time=7060}
+messages[86] = {caught=7059, full=7030, item=7071, large=7070, mcaught=7034, monster=7072, senses=7073, small=7028, time=7060}
 messages[87] = {caught=7059, full=7030, item=7071, large=7070, mcaught=7034, monster=7072, senses=7073, small=7028, time=7060}
 messages[88] = {caught=7364, full=7335, item=7376, large=7375, mcaught=7339, monster=7377, senses=7378, small=7333, time=7365}
 messages[89] = {caught=7059, full=7030, item=7071, large=7070, mcaught=7034, monster=7072, senses=7073, small=7028, time=7060}

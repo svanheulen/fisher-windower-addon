@@ -55,7 +55,7 @@ zones = {
     83: 6503, # vunkerl inlet [s]
     84: 6504, # batallia downs [s]
     85: 6505, # la vaule [s]
-    #86: 6506, # everbloom hollow
+    86: 6506, # everbloom hollow
     87: 6507, # bastok markets [s]
     88: 6508, # north gustaberg [s]
     89: 6509, # grauberg [s]
