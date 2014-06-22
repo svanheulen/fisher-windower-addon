@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '3.2.0'
+_addon.version = '3.2.0-dev'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -515,11 +515,6 @@ function fish_command(arg)
         windower.add_to_chat(204, 'added fish:')
         windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
-        if arg[3]:lower() == '*' then
-            windower.add_to_chat(204, 'removed all fish')
-            fish:clear()
-            return
-        end
         local item_id = tonumber(arg[3])
         if item_id == nil then
             item_id = find_item_id(arg[3])
@@ -531,6 +526,9 @@ function fish_command(arg)
         fish[item_id] = nil
         windower.add_to_chat(204, 'removed fish:')
         windower.add_to_chat(204, '  name: %s, item id: %d':format(res.items[item_id].name:lower(), item_id))
+    elseif #arg == 2 and arg[2]:lower() == 'clear' then
+        windower.add_to_chat(204, 'removed all fish')
+        fish:clear()
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         windower.add_to_chat(204, 'fish list:')
         for item_id,value in pairs(fish) do
@@ -563,11 +561,6 @@ function bait_command(arg)
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
-        if arg[3]:lower() == '*' then
-            windower.add_to_chat(204, 'removed all bait')
-            bait:clear()
-            return
-        end
         local item_id = tonumber(arg[3])
         if item_id == nil then
             _,item_id = res.items:with('name', arg[3])
@@ -583,6 +576,9 @@ function bait_command(arg)
         else
             windower.add_to_chat(167, 'invalid bait name or item id')
         end
+    elseif #arg == 2 and arg[2]:lower() == 'clear' then
+        windower.add_to_chat(204, 'removed all bait')
+        bait:clear()
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         windower.add_to_chat(204, 'bait list:')
         for item_id,_ in pairs(bait) do

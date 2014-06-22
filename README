@@ -55,7 +55,7 @@ The available commands are:
             Adds to the list of fish to catch.
         fisher fish remove <name or item id>
             Removes from the list of fish to catch.
-        fisher fish remove *
+        fisher fish clear
             Clears the list of fish to catch.
         fisher fish list
             Displays the list of fish to catch.
@@ -64,7 +64,7 @@ The available commands are:
             Adds to the list of bait to use.
         fisher bait remove <name or item id>
             Removes from the list of bait to use.
-        fisher bait remove *
+        fisher bait clear
             Clears the list of bait to use.
         fisher bait list
             Displays the list of bait to use.
@@ -85,9 +85,9 @@ The available commands are:
     fisher fatigue <count>
         Sets remaining catches until fatigued.
     fisher stats [clear]
-        Displays stats about your fishing.
+        Displays (or clears) stats about your fishing.
     fisher resetdb
-        Clears all known bite IDs from settings file.
+        Resets all known bite IDs from settings file.
 
 Examples:
     //fisher fish add "Moat Carp" 5
