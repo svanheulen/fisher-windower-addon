@@ -492,6 +492,9 @@ end
 
 function check_unload()
     settings:save('all')
+    if running then
+        fisher_command('stop')
+    end
 end
 
 -- command functions
