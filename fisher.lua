@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '3.2.0-dev'
+_addon.version = '3.3.0'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -541,7 +541,7 @@ function fish_command(arg)
         windower.add_to_chat(167, 'usage:')
         windower.add_to_chat(167, '  fisher fish add <name or item id> <catch delay>')
         windower.add_to_chat(167, '  fisher fish remove <name or item id>')
-        windower.add_to_chat(167, '  fisher fish remove *')
+        windower.add_to_chat(167, '  fisher fish clear')
         windower.add_to_chat(167, '  fisher fish list')
     end
 end
@@ -591,7 +591,7 @@ function bait_command(arg)
         windower.add_to_chat(167, 'usage:')
         windower.add_to_chat(167, '  fisher bait add <name or item id>')
         windower.add_to_chat(167, '  fisher bait remove <name or item id>')
-        windower.add_to_chat(167, '  fisher bait remove *')
+        windower.add_to_chat(167, '  fisher bait clear')
         windower.add_to_chat(167, '  fisher bait list')
     end
 end
