@@ -38,14 +38,14 @@ zones = {
     53: 6473, # nashmau
     54: 6474, # arrapago reef
     55: 6475, # ilrusi atoll
-    #56: 6476, # periqia
+    56: 6476, # periqia
     57: 6477, # talacca cove
     58: 6478, # silver sea route to nashmau
     59: 6479, # silver sea route to al zahbi
     #60: 6480, # the ashu talif
     61: 6481, # mount zhayolm
     65: 6485, # mamook
-    #66: 6486, # mamool ja training grounds
+    66: 6486, # mamool ja training grounds
     #67: 6487, # jade sepulcher
     68: 6488, # aydeewa subterrane
     #69: 6489, # leujaoam sanctum
