@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '3.3.0'
+_addon.version = '3.3.0-dev'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -414,7 +414,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if current.item_id ~= nil then
                 update_fish()
             elseif settings.senses and settings.fish[tostring(current.bite_id)] then
-                windower.add_to_chat(204, 'hooked a %s':format(res.items[settings.fish[tostring(current.bite_id)]].name:lower()))
+                local player = windower.ffxi.get_player()
+                local zone_id = windower.ffxi.get_info().zone
+                windower.packets.inject_incoming(0x2A, 'IIIIIIHHI':pack(0x102A, player.id, settings.fish[tostring(current.bite_id)], 0, 0, 0, player.index, messages[zone_id].senses + 0x8000, 0))
             end
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
