@@ -179,6 +179,8 @@ zones = {
     273: 85608, # woh gates
     #274: 85609, # outer ra'kaznar
     #275: 85610, # outer ra'kaznar [u]
+    #276: 85611, # ra'kaznar inner court
+    277: 85612, # ra'kaznar turris
     280: 85615, # mog garden
     #281: 85616, # leafallia
 }
