@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- addon information
 
 _addon.name = 'fisher'
-_addon.version = '3.4.0'
+_addon.version = '3.4.1'
 _addon.command = 'fisher'
 _addon.author = 'Seth VanHeulen (Acacia@Odin)'
 
@@ -128,7 +128,7 @@ end
 
 function equip_bait()
     for slot,item in pairs(windower.ffxi.get_items().inventory) do
-        if bait:contains(item.id) and item.status == 0 then
+        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
             message(1, 'equipping bait')
             message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3, 0)
@@ -136,7 +136,7 @@ function equip_bait()
         end
     end
     for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
-        if bait:contains(item.id) and item.status == 0 then
+        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
             message(1, 'equipping bait')
             message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
             windower.ffxi.set_equip(slot, 3, 8)
@@ -170,7 +170,7 @@ function move_fish()
     message(1, 'moving fish to bags')
     local moved = 0
     for slot,item in pairs(items.inventory) do
-        if fish[item.id] ~= nil and item.status == 0 then
+        if type(item) == 'table' and fish[item.id] ~= nil and item.status == 0 then
             if empty_satchel > 0 then
                 windower.ffxi.put_item(5, slot, item.count)
                 empty_satchel = empty_satchel - 1
@@ -204,21 +204,21 @@ function move_bait()
     message(1, 'moving bait to inventory')
     local moved = 0
     for slot,item in pairs(items.satchel) do
-        if bait:contains(item.id) and count > 0 then
+        if type(item) == 'table' and bait:contains(item.id) and count > 0 then
             windower.ffxi.get_item(5, slot, item.count)
             count = count - 1
             moved = moved + 1
         end
     end
     for slot,item in pairs(items.sack) do
-        if bait:contains(item.id) and count > 0 then
+        if type(item) == 'table' and bait:contains(item.id) and count > 0 then
             windower.ffxi.get_item(6, slot, item.count)
             count = count - 1
             moved = moved + 1
         end
     end
     for slot,item in pairs(items.case) do
-        if bait:contains(item.id) and count > 0 then
+        if type(item) == 'table' and bait:contains(item.id) and count > 0 then
             windower.ffxi.get_item(7, slot, item.count)
             count = count - 1
             moved = moved + 1
