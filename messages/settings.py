@@ -183,4 +183,7 @@ zones = {
     277: 85612, # ra'kaznar turris
     280: 85615, # mog garden
     #281: 85616, # leafallia
+    288: 85623, # escha - zi'tah
+    289: 85624, # escha - ru'aun
+    291: 85626, # reisenjima
 }
