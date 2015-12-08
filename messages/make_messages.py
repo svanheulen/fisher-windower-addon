@@ -1,4 +1,5 @@
 import array
+import os
 import struct
 import winreg
 
@@ -12,9 +13,9 @@ def find_dat(dat_id):
     for i in range(1, 10):
         vtable = None
         if i == 1:
-            vtable = open('{}VTABLE.DAT'.format(ffxi_path), 'rb')
+            vtable = open(os.path.join(ffxi_path, 'VTABLE.DAT'), 'rb')
         else:
-            vtable = open('{}ROM{}\\VTABLE{}.DAT'.format(ffxi_path, i, i), 'rb')
+            vtable = open(os.path.join(ffxi_path, 'ROM{}'.format(i), 'VTABLE{}.DAT'.format(i)), 'rb')
         vtable.seek(dat_id)
         temp = vtable.read(1)[0]
         vtable.close()
@@ -22,16 +23,16 @@ def find_dat(dat_id):
             continue
         ftable = None
         if i == 1:
-            ftable = open('{}FTABLE.DAT'.format(ffxi_path), 'rb')
+            ftable = open(os.path.join(ffxi_path, 'FTABLE.DAT'), 'rb')
         else:
-            ftable = open('{}ROM{}\\FTABLE{}.DAT'.format(ffxi_path, i, i), 'rb')
+            ftable = open(os.path.join(ffxi_path, 'ROM{}'.format(i), 'FTABLE{}.DAT'.format(i)), 'rb')
         ftable.seek(dat_id * 2)
         path = struct.unpack('H', ftable.read(2))[0]
         ftable.close()
         if i == 1:
-            return '{}ROM\\{}\\{}.DAT'.format(ffxi_path, path >> 7, path & 0x7f)
+            return os.path.join(ffxi_path, 'ROM', '{}'.format(path >> 7), '{}.DAT'.format(path & 0x7f))
         else:
-            return '{}ROM{}\\{}\\{}.DAT'.format(ffxi_path, i, path >> 7, path & 0x7f)
+            return os.path.join(ffxi_path, 'ROM{}'.format(i), '{}'.format(path >> 7), '{}.DAT'.format(path & 0x7f))
     return None
 
 def decipher_dialog(dat_file):
