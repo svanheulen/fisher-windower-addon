@@ -91,6 +91,11 @@ The available commands are:
         Displays (or clears) stats about your fishing.
     fisher resetdb
         Resets all known bite IDs from settings file.
+	fisher random <on/ff>
+		This setting will randomize your casting, catching, and release time. (default: off)
+		When set to on, your specified catch delay time will randomly be +/- a random number
+		between 0 and 1. The cast and release times will randomly be + a random number
+		between 0 and 1.
 
 Examples:
     //fisher fish add "Moat Carp" 5
