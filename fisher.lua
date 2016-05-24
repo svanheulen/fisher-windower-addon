@@ -428,17 +428,18 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
-                if settings.random then
+                local delay 
+				if settings.random then
 					if math.random() < 0.5 then
-						local delay = fish:with('bite_id', current.bite_id).delay + math.random()
+						delay = fish:with('bite_id', current.bite_id).delay + math.random()
 					else
-						local delay = fish:with('bite_id', current.bite_id).delay - math.random()
+						delay = fish:with('bite_id', current.bite_id).delay - math.random()
 					end
 				else
-					local delay = fish:with('bite_id', current.bite_id).delay
+					delay = fish:with('bite_id', current.bite_id).delay
 				end
-                message(2, 'catching fish in %d seconds':format(delay))
-                windower.send_command('wait %d; lua i fisher catch %d':format(delay, stats.casts))
+				message(2, 'catching fish in %.2f seconds':format(delay))
+				windower.send_command('wait %.2f; lua i fisher catch %d':format(delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
@@ -446,8 +447,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             else
                 if settings.random then
 					local releasedelay = settings.delay.release + math.random()
-					message(2, 'releasing fish in %d seconds':format(releasedelay))
-					windower.send_command('wait %d; lua i fisher release %d':format(releasedelay, stats.casts))
+					message(2, 'releasing fish in %.2f seconds':format(releasedelay))
+					windower.send_command('wait %.2f; lua i fisher release %d':format(releasedelay, stats.casts))
 				else
 					message(2, 'releasing fish in %d seconds':format(settings.delay.release))
 					windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
@@ -478,8 +479,8 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 message(3, 'status changed to idle')
                 if settings.random then
 					local castdelay = settings.delay.cast + math.random()
-					message(2, 'casting in %d seconds':format(castdelay))
-					windower.send_command('wait %d; lua i fisher cast':format(castdelay))
+					message(2, 'casting in %.2f seconds':format(castdelay))
+					windower.send_command('wait %.2f; lua i fisher cast':format(castdelay))
 				else
 					message(2, 'casting in %d seconds':format(settings.delay.cast))
 					windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
