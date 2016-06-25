@@ -96,6 +96,9 @@ The available commands are:
 		When set to on, your specified catch delay time will randomly be +/- a random number
 		between 0 and 1. The cast and release times will randomly be + a random number
 		between 0 and 1.
+	fisher dncmax <count>
+		This setting will change the maximum number of times you can receive the 
+		"You didn't catch anything." message before stopping fishing. (default: 20)
 
 Examples:
     //fisher fish add "Moat Carp" 5
