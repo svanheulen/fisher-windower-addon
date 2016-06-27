@@ -36,6 +36,7 @@ require('tables')
 defaults = {}
 defaults.chat = 1
 defaults.log = -1
+defaults.random = false
 defaults.equip = false
 defaults.move = false
 defaults.senses = true
@@ -47,13 +48,14 @@ defaults.delay.move = 2
 defaults.fatigue = {}
 defaults.fatigue.date = os.date('!%Y-%m-%d', os.time() + 32400)
 defaults.fatigue.remaining = 200
+defaults.didnotcatchmax = 20
 defaults.fish = {}
 
 -- global variables
 
 fish = T{}
 bait = S{}
-stats = {casts=0, bites=0, catches=0}
+stats = {casts=0, bites=0, catches=0, didnotcatchcount=0}
 
 running = false
 log_file = nil
@@ -242,7 +244,7 @@ end
 function check_fatigued()
     message(2, 'checking fishing fatigue')
     update_day()
-    message(3, 'catches until fatigued: %d':format(settings.fatigue.remaining))
+    message(2, 'catches until fatigued: %d':format(settings.fatigue.remaining))
     return settings.fatigue.remaining == 0
 end
 
@@ -310,7 +312,10 @@ end
 
 function cast()
     if running then
-        if check_fatigued() then
+		if stats.didnotcatchcount >= settings.didnotcatchmax then
+			message(0, 'reached maximum number of casts')
+			fisher_command('stop')
+        elseif check_fatigued() then
             message(0, 'reached fishing fatigue')
             fisher_command('stop')
         elseif check_rod() then
@@ -377,12 +382,15 @@ function check_incoming_text(original, modified, original_mode, modified_mode, b
         message(3, 'recieved error text')
         if error_retry then
             error_retry = false
-            message(2, 'casting in %d seconds':format(settings.delay.cast))
-            windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
-        else
+			message(2, 'casting in %.2f seconds':format(settings.delay.cast + (settings.random and math.random() or 0.0)))
+			windower.send_command('wait %.2f; lua i fisher cast':format(settings.delay.cast + (settings.random and math.random() or 0.0)))
+		else
             message(0, 'unable to fish')
             fisher_command('stop')
         end
+	elseif running and original:find('You didn\'t catch anything.') then
+		message(2, 'No catch detected.')
+		stats.didnotcatchcount = stats.didnotcatchcount + 1
     end
 end
 
@@ -421,16 +429,17 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             if current.monster == false and fish:with('bite_id', current.bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
-                local delay = fish:with('bite_id', current.bite_id).delay
-                message(2, 'catching fish in %d seconds':format(delay))
-                windower.send_command('wait %d; lua i fisher catch %d':format(delay, stats.casts))
+                local delay = fish:with('bite_id', current.bite_id).delay + (settings.random and 1.0 - math.random()*2 or 0.0)
+				message(2, 'catching fish in %.2f seconds':format(delay))
+				windower.send_command('wait %.2f; lua i fisher catch %.2f':format(delay, stats.casts))
             elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
                 message(2, 'catching fish when low on time')
             else
-                message(2, 'releasing fish in %d seconds':format(settings.delay.release))
-                windower.send_command('wait %d; lua i fisher release %d':format(settings.delay.release, stats.casts))
+				local releasedelay = settings.delay.release + (settings.random and math.random() or 0.0)
+				message(2, 'releasing fish in %.2f seconds':format(releasedelay))
+				windower.send_command('wait %.2f; lua i fisher release %d':format(releasedelay, stats.casts))
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local zone_id = windower.ffxi.get_info().zone
@@ -444,6 +453,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                     current.count = 1
                 end
                 stats.catches = stats.catches + 1
+				stats.didnotcatchcount = 0
                 update_fatigue()
             end
         elseif id == 0x37 then
@@ -455,8 +465,9 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 error_retry = true
             elseif new_status == 0 and old_status ~= 0 then
                 message(3, 'status changed to idle')
-                message(2, 'casting in %d seconds':format(settings.delay.cast))
-                windower.send_command('wait %d; lua i fisher cast':format(settings.delay.cast))
+				local castdelay = settings.delay.cast + (settings.random and math.random() or 0.0)
+				message(2, 'casting in %.2f seconds':format(castdelay))
+				windower.send_command('wait %.2f; lua i fisher cast':format(castdelay))
             end
             old_status = new_status
         end
@@ -690,8 +701,9 @@ function fisher_command(...)
         windower.add_to_chat(204, 'bites: %d, bite rate: %d%%':format(stats.bites, bite_rate))
         windower.add_to_chat(204, 'catches: %d, catch rate: %d%%, catch/bite rate: %d%%':format(stats.catches, catch_rate, catch_bite_rate))
         windower.add_to_chat(204, 'losses: %d, loss rate: %d%%, loss/bite rate: %d%%':format(losses, loss_rate, loss_bite_rate))
+		windower.add_to_chat(204, 'did not catch count: %d':format(stats.didnotcatchcount))
     elseif #arg == 2 and arg[1]:lower() == 'stats' and arg[2]:lower() == 'clear' then
-        stats = {casts=0, bites=0, catches=0}
+        stats = {casts=0, bites=0, catches=0, didnotcatch=0}
         windower.add_to_chat(204, 'reset fishing statistics')
     elseif #arg == 2 and arg[1]:lower() == 'fatigue' then
         local count = tonumber(arg[2])
@@ -709,6 +721,13 @@ function fisher_command(...)
             windower.add_to_chat(204, 'remaining fatigue: %d':format(settings.fatigue.remaining))
             settings:save('all')
         end
+	elseif #arg == 2 and arg[1]:lower() == 'random' then
+		settings.random = (arg[2]:lower() == 'on')
+        windower.add_to_chat(204, 'random catch time: %s':format(settings.random and 'on' or 'off'))
+        settings:save('all')
+	elseif #arg == 2 and arg[1]:lower() == 'dncmax' then
+		settings.didnotcatchmax = count
+		settings;save('all')
     else
         windower.add_to_chat(167, 'usage:')
         windower.add_to_chat(167, '  fisher fish ...')
@@ -723,6 +742,8 @@ function fisher_command(...)
         windower.add_to_chat(167, '  fisher fatigue <count>')
         windower.add_to_chat(167, '  fisher stats [clear]')
         windower.add_to_chat(167, '  fisher resetdb')
+		windower.add_to_chat(167, '  fisher random <on/off>')
+		windower.add_to_chat(167, '  fisher dncmax <count>')
     end
 end
 
