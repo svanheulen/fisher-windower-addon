@@ -727,7 +727,7 @@ function fisher_command(...)
         settings:save('all')
 	elseif #arg == 2 and arg[1]:lower() == 'dncmax' then
 		settings.didnotcatchmax = count
-		settings;save('all')
+		settings:save('all')
     else
         windower.add_to_chat(167, 'usage:')
         windower.add_to_chat(167, '  fisher fish ...')
