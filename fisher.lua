@@ -130,7 +130,7 @@ function equip_bait()
             if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
                 message(1, 'equipping bait')
                 message(3, 'bag: %d, slot: %d, id: %d, status: %d':format(bag, slot, item.id, item.status))
-                windower.ffxi.set_equip(slot, 3, 0)
+                windower.ffxi.set_equip(slot, 3, bag)
                 return true
             end
         end
