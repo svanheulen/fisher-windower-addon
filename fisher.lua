@@ -99,50 +99,40 @@ end
 -- equipment helper functions
 
 function check_rod()
-    local items = windower.ffxi.get_items()
+    local equipment = windower.ffxi.get_items().equipment
     message(2, 'checking equipped fishing rod')
-    if items.equipment.range == 0 then
+    if equipment.range == 0 then
         message(3, 'item slot: 0')
         return true
-    elseif items.equipment.range_bag == 0 then
-        message(3, 'inventory slot: %d, id: %d':format(items.equipment.range, items.inventory[items.equipment.range].id))
-        return res.items[items.inventory[items.equipment.range].id].skill ~= 48
     else
-        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.range, items.wardrobe[items.equipment.range].id))
-        return res.items[items.wardrobe[items.equipment.range].id].skill ~= 48
+        local items = windower.ffxi.get_items(equipment.range_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.range_bag, equipment.range, items[equipment.range].id))
+        return res.items[items[equipment.range].id].skill ~= 48
     end
 end
 
 function check_bait()
-    local items = windower.ffxi.get_items()
+    local equipment = windower.ffxi.get_items().equipment
     message(2, 'checking equipped bait')
-    if items.equipment.ammo == 0 then
+    if equipment.ammo == 0 then
         message(3, 'item slot: 0')
         return false
-    elseif items.equipment.ammo_bag == 0 then
-        message(3, 'inventory slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
-        return bait:contains(items.inventory[items.equipment.ammo].id)
     else
-        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.ammo, items.wardrobe[items.equipment.ammo].id))
-        return bait:contains(items.wardrobe[items.equipment.ammo].id)
+        local items = windower.ffxi.get_items(equipment.ammo_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.ammo_bag, equipment.ammo, items[equipment.ammo].id))
+        return bait:contains(items[equipment.ammo].id)
     end
 end
 
 function equip_bait()
-    for slot,item in pairs(windower.ffxi.get_items().inventory) do
-        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
-            message(1, 'equipping bait')
-            message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3, 0)
-            return true
-        end
-    end
-    for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
-        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
-            message(1, 'equipping bait')
-            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3, 8)
-            return true
+    for _,bag in pairs({0, 8, 10, 11, 12}) do
+        for slot,item in pairs(windower.ffxi.get_items(bag)) do
+            if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
+                message(1, 'equipping bait')
+                message(3, 'bag: %d, slot: %d, id: %d, status: %d':format(bag, slot, item.id, item.status))
+                windower.ffxi.set_equip(slot, 3, bag)
+                return true
+            end
         end
     end
     return false
