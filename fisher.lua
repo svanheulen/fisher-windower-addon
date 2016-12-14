@@ -105,9 +105,9 @@ function check_rod()
         message(3, 'item slot: 0')
         return true
     else
-        local item_id = windower.ffxi.get_items(equipment.range_bag, equipment.range).id
-        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.range_bag, equipment.range, item_id))
-        return res.items[items_id].skill ~= 48
+        local items = windower.ffxi.get_items(equipment.range_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.range_bag, equipment.range, items[equipment.range].id))
+        return res.items[items[equipment.range].id].skill ~= 48
     end
 end
 
@@ -118,9 +118,9 @@ function check_bait()
         message(3, 'item slot: 0')
         return false
     else
-        local item_id = windower.ffxi.get_items(equipment.ammo_bag, equipment.ammo).id
-        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.ammo_bag, equipment.ammo, item_id))
-        return bait:contains(item_id)
+        local items = windower.ffxi.get_items(equipment.ammo_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.ammo_bag, equipment.ammo, items[equipment.ammo].id))
+        return bait:contains(items[equipment.ammo].id)
     end
 end
 
