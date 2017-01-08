@@ -99,6 +99,12 @@ The available commands are:
 	fisher dncmax <count>
 		This setting will change the maximum number of times you can receive the 
 		"You didn't catch anything." message before stopping fishing. (default: 20)
+	fisher dncc <count>
+		This setting will change the current No Catch Counter from the current value
+		to the <count> specified
+	fisher warp <on/off>
+		This setting will enable the auto-warp upon reaching maximum fatigue or maximum
+		no catches. Note: This does not check for your subjob as of this release.
 
 Examples:
     //fisher fish add "Moat Carp" 5
