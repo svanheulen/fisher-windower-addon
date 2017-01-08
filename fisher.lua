@@ -306,13 +306,13 @@ function cast()
 		if stats.didnotcatchcount >= settings.didnotcatchmax then
 			message(0, 'reached maximum number of no catches')
 			fisher_command('stop')
-			if settings.warp == 'on' then
+			if settings.warp == true then
 				windower.send_command('input /ma "Warp" <me>')
 			end
         elseif check_fatigued() then
             message(0, 'reached fishing fatigue')
             fisher_command('stop')
-			if settings.warp == 'on' then
+			if settings.warp == true then
 				windower.send_command('input /ma "Warp" <me>')
 			end
         elseif check_rod() then
