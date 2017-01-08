@@ -37,6 +37,7 @@ defaults = {}
 defaults.chat = 1
 defaults.log = -1
 defaults.random = false
+defaults.warp = false
 defaults.equip = false
 defaults.move = false
 defaults.senses = true
@@ -99,50 +100,40 @@ end
 -- equipment helper functions
 
 function check_rod()
-    local items = windower.ffxi.get_items()
+    local equipment = windower.ffxi.get_items().equipment
     message(2, 'checking equipped fishing rod')
-    if items.equipment.range == 0 then
+    if equipment.range == 0 then
         message(3, 'item slot: 0')
         return true
-    elseif items.equipment.range_bag == 0 then
-        message(3, 'inventory slot: %d, id: %d':format(items.equipment.range, items.inventory[items.equipment.range].id))
-        return res.items[items.inventory[items.equipment.range].id].skill ~= 48
     else
-        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.range, items.wardrobe[items.equipment.range].id))
-        return res.items[items.wardrobe[items.equipment.range].id].skill ~= 48
+        local items = windower.ffxi.get_items(equipment.range_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.range_bag, equipment.range, items[equipment.range].id))
+        return res.items[items[equipment.range].id].skill ~= 48
     end
 end
 
 function check_bait()
-    local items = windower.ffxi.get_items()
+    local equipment = windower.ffxi.get_items().equipment
     message(2, 'checking equipped bait')
-    if items.equipment.ammo == 0 then
+    if equipment.ammo == 0 then
         message(3, 'item slot: 0')
         return false
-    elseif items.equipment.ammo_bag == 0 then
-        message(3, 'inventory slot: %d, id: %d':format(items.equipment.ammo, items.inventory[items.equipment.ammo].id))
-        return bait:contains(items.inventory[items.equipment.ammo].id)
     else
-        message(3, 'wardrobe slot: %d, id: %d':format(items.equipment.ammo, items.wardrobe[items.equipment.ammo].id))
-        return bait:contains(items.wardrobe[items.equipment.ammo].id)
+        local items = windower.ffxi.get_items(equipment.ammo_bag)
+        message(3, 'bag: %d, slot: %d, id: %d':format(equipment.ammo_bag, equipment.ammo, items[equipment.ammo].id))
+        return bait:contains(items[equipment.ammo].id)
     end
 end
 
 function equip_bait()
-    for slot,item in pairs(windower.ffxi.get_items().inventory) do
-        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
-            message(1, 'equipping bait')
-            message(3, 'inventory slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3, 0)
-            return true
-        end
-    end
-    for slot,item in pairs(windower.ffxi.get_items().wardrobe) do
-        if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
-            message(1, 'equipping bait')
-            message(3, 'wardrobe slot: %d, id: %d, status: %d':format(slot, item.id, item.status))
-            windower.ffxi.set_equip(slot, 3, 8)
-            return true
+    for _,bag in pairs({0, 8, 10, 11, 12}) do
+        for slot,item in pairs(windower.ffxi.get_items(bag)) do
+            if type(item) == 'table' and bait:contains(item.id) and item.status == 0 then
+                message(1, 'equipping bait')
+                message(3, 'bag: %d, slot: %d, id: %d, status: %d':format(bag, slot, item.id, item.status))
+                windower.ffxi.set_equip(slot, 3, bag)
+                return true
+            end
         end
     end
     return false
@@ -313,11 +304,17 @@ end
 function cast()
     if running then
 		if stats.didnotcatchcount >= settings.didnotcatchmax then
-			message(0, 'reached maximum number of casts')
+			message(0, 'reached maximum number of no catches')
 			fisher_command('stop')
+			if settings.warp == 'on' then
+				windower.send_command('input /ma "Warp" <me>')
+			end
         elseif check_fatigued() then
             message(0, 'reached fishing fatigue')
             fisher_command('stop')
+			if settings.warp == 'on' then
+				windower.send_command('input /ma "Warp" <me>')
+			end
         elseif check_rod() then
             message(0, 'no fishing rod equipped')
             fisher_command('stop')
@@ -440,6 +437,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
 				local releasedelay = settings.delay.release + (settings.random and math.random() or 0.0)
 				message(2, 'releasing fish in %.2f seconds':format(releasedelay))
 				windower.send_command('wait %.2f; lua i fisher release %d':format(releasedelay, stats.casts))
+				stats.didnotcatchcount = 0
             end
         elseif id == 0x27 and windower.ffxi.get_player().id == original:unpack('I', 5) then
             local zone_id = windower.ffxi.get_info().zone
@@ -725,9 +723,19 @@ function fisher_command(...)
 		settings.random = (arg[2]:lower() == 'on')
         windower.add_to_chat(204, 'random catch time: %s':format(settings.random and 'on' or 'off'))
         settings:save('all')
+	elseif #arg == 2 and arg[1]:lower() == 'warp' then
+		settings.warp = (arg[2]:lower() == 'on')
+        windower.add_to_chat(204, 'warp upon max fatigue: %s':format(settings.warp and 'on' or 'off'))
+        settings:save('all')
 	elseif #arg == 2 and arg[1]:lower() == 'dncmax' then
+		local count = tonumber(arg[2])
 		settings.didnotcatchmax = count
-		settings;save('all')
+		windower.add_to_chat(204, 'Max No Catch Limit: '..count)
+		settings:save('all')
+	elseif #arg == 2 and arg[1]:lower() == 'dncc' then
+		local count = tonumber(arg[2])
+		windower.add_to_chat(204, 'No Catch Counter: '..count)
+		stats.didnotcatchcount = count
     else
         windower.add_to_chat(167, 'usage:')
         windower.add_to_chat(167, '  fisher fish ...')
@@ -743,7 +751,9 @@ function fisher_command(...)
         windower.add_to_chat(167, '  fisher stats [clear]')
         windower.add_to_chat(167, '  fisher resetdb')
 		windower.add_to_chat(167, '  fisher random <on/off>')
-		windower.add_to_chat(167, '  fisher dncmax <count>')
+		windower.add_to_chat(167, '  fisher dncmax <count> - Max no catch detected limit')
+		windower.add_to_chat(167, '  fisher dncc <count> - Current no catch counter')
+		windower.add_to_chat(167, '  fisher warp <on/off> - Warp on max fatigue or max no catch')
     end
 end
 
