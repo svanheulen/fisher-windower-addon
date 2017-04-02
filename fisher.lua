@@ -226,7 +226,7 @@ function update_day()
     local today = os.date('!%Y-%m-%d', os.time() + 32400)
     if settings.fatigue.date ~= today then
         settings.fatigue.date = today
-        settings.fatigue.remaining = 200
+        settings.fatigue.remaining = 200 -- Ebisu Rod's cap is 210 fish, I think?
         settings:save('all')
     end
 end
@@ -261,23 +261,38 @@ function find_item_id(name)
     return item_id
 end
 
-function get_bite_id(id)
-    for bite_id,item_id in pairs(settings.fish) do
-        if item_id == id then
-            return tonumber(bite_id)
-        end
+function check_bite_id(set,bite_id)
+    if type(set) == 'table' then
+        return S(set):contains(current.bite_id)
     end
-    return nil
 end
 
 function update_fish()
     message(2, 'updating fish database')
+    
     if fish[current.item_id] ~= nil then
-        fish[current.item_id].bite_id = current.bite_id
-    elseif fish:with('bite_id', current.bite_id) then
-        fish:with('bite_id', current.bite_id).bite_id = nil
+        if not fish[current.item_id].bite_id then
+            fish[current.item_id].bite_id = S{}
+        end
+        if not fish[current.item_id].bite_id:contains(current.bite_id) then
+            fish[current.item_id].bite_id:append(current.bite_id)
+        end
+    --[[elseif fish:with('bite_id', function (bite_id_set) -- This doesn't strike me as being strictly necessary.
+            return bite_id_set:contains(current.bite_id)
+        end) then
+        fish:with('bite_id', current.bite_id).bite_id = nil]]
     end
-    settings.fish[tostring(current.bite_id)] = current.item_id
+    local str_item_id = tostring(current.item_id)
+    if not settings.fish[str_item_id] then
+        settings.fish[str_item_id] = {}
+    end
+    if not check_bite_id(settings.fish[str_item_id],current.bite_id) then
+        local i = 1
+        while settings.fish[str_item_id][tostring(i)] do
+            i = i + 1
+        end
+        settings.fish[str_item_id][tostring(i)] = current.bite_id
+    end
     message(3, 'updated fish bite id: %d, item id: %d':format(current.bite_id, current.item_id))
     settings:save('all')
 end
@@ -411,21 +426,31 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
             current.bite_id = original:unpack('I', 11)
             if current.item_id ~= nil then
                 update_fish()
-            elseif settings.senses and settings.fish[tostring(current.bite_id)] then
+            elseif settings.senses and T(settings.fish):find(check_bite_id) then
                 local player = windower.ffxi.get_player()
                 local zone_id = windower.ffxi.get_info().zone
-                windower.packets.inject_incoming(0x2A, 'IIIIIIHHI':pack(0x102A, player.id, settings.fish[tostring(current.bite_id)], 0, 0, 0, player.index, messages[zone_id].senses + 0x8000, 0))
+                local item_id,tab = T(settings.fish):find(check_bite_id)
+                if res.items[item_id] then
+                    windower.packets.inject_incoming(0x2A, 'IIIIIIHHI':pack(0x102A, player.id, item_id, 0, 0, 0, player.index, messages[zone_id].senses + 0x8000, 0))
+                else
+                    print(item_id,tab)
+                end
             end
-            if current.monster == false and fish:with('bite_id', current.bite_id) then
+            if current.monster == false and fish:with('bite_id', check_bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
-                local delay = fish:with('bite_id', current.bite_id).delay + (settings.random and 1.0 - math.random()*2 or 0.0)
+                local delay = fish:with('bite_id', check_bite_id).delay + (settings.random and 1.0 - math.random()*2 or 0.0)
 				message(2, 'catching fish in %.2f seconds':format(delay))
 				windower.send_command('wait %.2f; lua i fisher catch %.2f':format(delay, stats.casts))
-            elseif current.monster == false and fish:with('bite_id', nil) and settings.fish[tostring(current.bite_id)] == nil then
+            elseif current.monster == false and not T(settings.fish):find(check_bite_id) then
                 current.key = original:sub(21)
                 stats.bites = stats.bites + 1
-                message(2, 'catching fish when low on time')
+                message(2, 'don\'t know what the fish is, so catching it when low on time')
+            --[[elseif current.monster then
+                local delay = 2 + (settings.random and 1.0 - math.random()*2 or 0.0)
+                current.key = original:sub(21)
+				message(2, 'catching monster in %.2f seconds':format(delay))
+				windower.send_command('wait %.2f; lua i fisher catch %.2f':format(delay, stats.casts))]]
             else
 				local releasedelay = settings.delay.release + (settings.random and math.random() or 0.0)
 				message(2, 'releasing fish in %.2f seconds':format(releasedelay))
@@ -517,9 +542,12 @@ function fish_command(arg)
             windower.add_to_chat(167, 'invalid cast delay time')
             return
         end
-        fish[item_id] = {delay=delay, bite_id=get_bite_id(item_id)}
+        fish[item_id] = {delay=delay, bite_id=settings.fish[tostring(item_id)] and settings.fish[tostring(item_id)] or nil}
+        if fish[item_id].bite_id then
+            fish[item_id].bite_id = S(fish[item_id].bite_id)
+        end
         windower.add_to_chat(204, 'added fish:')
-        windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id or 'unknown'))
+        windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, delay, fish[item_id].bite_id and tostring(fish[item_id].bite_id) or 'unknown'))
     elseif #arg == 3 and arg[2]:lower() == 'remove' then
         local item_id = tonumber(arg[3])
         if item_id == nil then
@@ -538,7 +566,7 @@ function fish_command(arg)
     elseif #arg == 2 and arg[2]:lower() == 'list' then
         windower.add_to_chat(204, 'fish list:')
         for item_id,value in pairs(fish) do
-            windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, value.delay, value.bite_id or 'unknown'))
+            windower.add_to_chat(204, '  name: %s, item id: %d, delay: %d, bite id: %s':format(res.items[item_id].name:lower(), item_id, value.delay, value.bite_id and tostring(value.bite_id) or 'unknown'))
         end
     else
         windower.add_to_chat(167, 'usage:')
@@ -664,8 +692,8 @@ function fisher_command(...)
     elseif #arg == 1 and arg[1]:lower() == 'resetdb' then
         settings.fish = {}
         settings:save('all')
-        for _,value in pairs(fish) do
-            value.bite_id = nil
+        for i in pairs(fish) do
+            fish[i].bite_id = nil
         end
         windower.add_to_chat(204, 'reset fish database')
     elseif #arg == 1 and arg[1]:lower() == 'stats' then
