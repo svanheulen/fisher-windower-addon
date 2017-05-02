@@ -503,7 +503,7 @@ function check_incoming_chunk(id, original, modified, injected, blocked)
                 local delay = 2 + (settings.random and 1.0 - math.random()*2 or 0.0)
                 current.key = original:sub(21)
 				message(2, 'catching monster in %.2f seconds':format(delay))
-				windower.send_command('wait %.2f; lua i fisher catch %.2f':format(delay, stats.casts))]]
+				windower.send_command('wait %.2f; lua i fisher catch %.2f':format(delay, stats.casts))
             else
 				local releasedelay = settings.delay.release + (settings.random and math.random() or 0.0)
 				message(2, 'releasing fish in %.2f seconds':format(releasedelay))
