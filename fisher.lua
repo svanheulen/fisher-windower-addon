@@ -249,7 +249,7 @@ function update_day()
     local today = os.date('!%Y-%m-%d', os.time() + 32400)
     if settings.fatigue.date ~= today then
         settings.fatigue.date = today
-        settings.fatigue.remaining = 200
+        settings.fatigue.remaining = 200 -- Ebisu Rod's cap is 210 fish, I think?
         settings:save('all')
     end
 end
