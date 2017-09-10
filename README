@@ -91,6 +91,14 @@ The available commands are:
         Displays (or clears) stats about your fishing.
     fisher resetdb
         Resets all known bite IDs from settings file.
+    fisher random <on/ff>
+        This setting will randomize your casting, catching, and release time. (default: off)
+        When set to on, your specified catch delay time will randomly be +/- a random number
+        between 0 and 1. The cast and release times will randomly be + a random number
+        between 0 and 1.
+    fisher dncmax <count>
+        This setting will change the maximum number of times you can receive the 
+        "You didn't catch anything." message before stopping fishing. (default: 20)
 
 Examples:
     //fisher fish add "Moat Carp" 5
